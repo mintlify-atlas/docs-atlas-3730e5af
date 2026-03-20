@@ -1,0 +1,132 @@
+{
+  "projectType": "saas",
+  "projectName": "Stremio Web",
+  "projectDescription": "Stremio is a modern media center web application that lets users discover, watch, and organize video content from movies, series, channels, and more through an extensible addon system.",
+  "theme": "almond",
+  "primaryColor": "#5a5ded",
+  "lightColor": "#abb4f4",
+  "darkColor": null,
+  "navigation": {
+    "tabs": [
+      {
+        "tab": "Documentation",
+        "groups": [
+          {
+            "group": "Get Started",
+            "pages": [
+              "introduction",
+              "getting-started/quickstart",
+              "getting-started/installation"
+            ]
+          },
+          {
+            "group": "Core Features",
+            "pages": [
+              "features/board",
+              "features/discover",
+              "features/library",
+              "features/search",
+              "features/player",
+              "features/calendar"
+            ]
+          },
+          {
+            "group": "Addons",
+            "pages": [
+              "addons/overview",
+              "addons/installing",
+              "addons/managing"
+            ]
+          },
+          {
+            "group": "Configuration",
+            "pages": [
+              "configuration/settings",
+              "configuration/streaming-server",
+              "configuration/player-settings",
+              "configuration/keyboard-shortcuts"
+            ]
+          },
+          {
+            "group": "Deployment",
+            "pages": [
+              "deployment/docker",
+              "deployment/building",
+              "deployment/self-hosting"
+            ]
+          },
+          {
+            "group": "Contributing",
+            "pages": [
+              "contributing/overview",
+              "contributing/development-setup",
+              "contributing/architecture"
+            ]
+          }
+        ]
+      },
+      {
+        "tab": "Reference",
+        "groups": [
+          {
+            "group": "Architecture",
+            "pages": [
+              "reference/architecture",
+              "reference/routing",
+              "reference/services",
+              "reference/components"
+            ]
+          },
+          {
+            "group": "Services",
+            "pages": [
+              "reference/services/core",
+              "reference/services/chromecast",
+              "reference/services/keyboard-shortcuts",
+              "reference/services/drag-and-drop"
+            ]
+          },
+          {
+            "group": "Content Types",
+            "pages": [
+              "reference/content-types/movies",
+              "reference/content-types/series",
+              "reference/content-types/channels",
+              "reference/content-types/other"
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  "keyFeatures": [
+    "Board view for personalized content recommendations",
+    "Discover page for browsing movies, series, channels, and more",
+    "Personal library management with continue-watching tracking",
+    "Built-in video player with subtitle support and external player options",
+    "Extensible addon system for adding content sources",
+    "Chromecast support for casting to TV",
+    "Keyboard shortcuts for power users",
+    "Calendar view for tracking upcoming episodes",
+    "Search across all installed addons",
+    "Docker support for self-hosting",
+    "PWA (Progressive Web App) support",
+    "Streaming server integration for local content"
+  ],
+  "publicApiSurface": [
+    "Board route - /",
+    "Discover route - /discover/:transportUrl?/:type?/:catalogId?",
+    "Library route - /library/:type?",
+    "Search route - /search",
+    "MetaDetails route - /detail/:type/:id/:videoId?",
+    "Player route - /player/:stream?",
+    "Addons route - /addons/:transportUrl?/:type?/:catalogId?",
+    "Settings route - /settings",
+    "Calendar route - /calendar",
+    "Core service - stateChanged event",
+    "useProfile hook",
+    "useStreamingServer hook",
+    "useModelState hook",
+    "useNotifications hook"
+  ]
+}
