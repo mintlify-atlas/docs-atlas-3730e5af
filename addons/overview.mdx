@@ -63,13 +63,13 @@ Other addons are optionally configurable: they work out of the box but expose a 
 The Addons page is a deep-linkable route. The URL encodes which catalog you are viewing:
 
 ```text
-/addons/:transportUrl?/:type?/:catalogId?
+/addons/:type?/:transportUrl?/:catalogId?
 ```
 
 | Segment | Description |
 |---------|-------------|
-| `transportUrl` | The transport URL of the addon catalog source (URL-encoded). Omit to view installed addons. |
-| `type` | Content type filter, e.g. `movie`, `series` |
+| `type` | Content type filter, e.g. `movie`, `series`. Omit to view all installed addons. |
+| `transportUrl` | The transport URL of the addon catalog source (URL-encoded) |
 | `catalogId` | The catalog identifier from the addon's manifest |
 
-When no segments are provided, the page shows your installed addons. When all three are provided, the page shows the addons available in a remote addon catalog.
+When no segments are provided, the page shows your installed addons. When `type` is provided, the installed addons are filtered by that content type. When all three are provided, the page shows addons available in a remote addon catalog.

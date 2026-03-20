@@ -51,20 +51,15 @@ When enabled, Stremio passes multi-channel audio (5.1, 7.1) through to your audi
 
 ## Controls
 
-### Seek duration
+### Seek duration (arrow key)
 
-The number of seconds to skip forward or backward when pressing the arrow keys during playback. Available values:
+The number of seconds to skip when pressing `←` / `→` during playback. Available values: 3, 5, 10, 15, 20, 30 seconds.
 
-| Duration |
-|----------|
-| 3 seconds |
-| 5 seconds |
-| 10 seconds |
-| 15 seconds |
-| 20 seconds |
-| 30 seconds |
+### Seek duration (Shift + arrow key)
 
-A **short seek** is triggered by `←` / `→`. A **long seek** (Shift seek) uses a separately configurable duration from the same set of values, triggered by `Shift` + `←` / `Shift` + `→`.
+The number of seconds to skip when pressing `Shift` + `←` / `Shift` + `→` during playback. Uses the same set of values: 3, 5, 10, 15, 20, 30 seconds.
+
+These two durations are configured separately, letting you set a short nudge (e.g. 5 s) for the arrow keys and a larger jump (e.g. 30 s) for the Shift variant.
 
 ### Play in background
 
