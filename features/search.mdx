@@ -1,0 +1,73 @@
+---
+title: Search
+description: Search for any title across all installed addons simultaneously and jump directly to metadata or streams from the results.
+---
+
+Search queries every catalog-capable addon you have installed at the same time and presents results as grouped rows, one per addon. It is the fastest way to find a specific title when you know what you are looking for.
+
+## How to search
+
+<Steps>
+  <Step title="Open Search">
+    Click the search icon in the top navigation bar, or press `0` on your keyboard to jump directly to the search input.
+  </Step>
+  <Step title="Type a query">
+    Start typing. Stremio sends the query to every installed addon that supports the `search` extra parameter. Results appear as rows beneath the input.
+  </Step>
+  <Step title="Browse results">
+    Each addon that returns results shows its own row with a horizontal list of posters. Scroll the page to see all addon rows; rows load as they come into view.
+  </Step>
+  <Step title="Open a title">
+    Click any poster to go to the title's metadata page, where you can read details and choose a stream.
+  </Step>
+</Steps>
+
+## What you can search for
+
+The Search page shows hints before you type a query:
+
+<CardGroup cols={2}>
+  <Card title="Categories and genres" icon="film">
+    Search for a genre name (e.g. "Action") to find titles tagged with that genre across your addons.
+  </Card>
+  <Card title="People" icon="user">
+    Search for an actor or director name to find titles they are associated with.
+  </Card>
+  <Card title="Protocols and links" icon="link">
+    Paste a magnet link, HTTP stream URL, or other supported protocol directly into the search bar to open it in the player.
+  </Card>
+  <Card title="Content types" icon="layers">
+    Search by content type keywords to surface movies, series, channels, and more.
+  </Card>
+</CardGroup>
+
+## Result rows
+
+Each row in the search results corresponds to a single addon's response. The row label shows the addon name and catalog. Results inside a row are sorted and ranked by the addon.
+
+<Note>
+  If no addons return results for a query, or if you have no addons installed that support search, the page shows an empty state message instead of rows.
+</Note>
+
+## Navigating to metadata
+
+Clicking a search result takes you to the **MetaDetails** page for that title. From there you can:
+
+- Read the full description, cast, and release info
+- Watch a trailer
+- Choose a stream from any addon that provides one
+- Add or remove the title from your library
+
+## URL format
+
+Search state is encoded in the URL query string so results are shareable and bookmarkable:
+
+```text
+/search?search=<query>
+```
+
+The legacy `query` parameter is also accepted for backwards compatibility:
+
+```text
+/search?query=<query>
+```

@@ -1,0 +1,90 @@
+---
+title: Installing addons
+description: How to install addons in Stremio by URL or by browsing the community addon catalog.
+---
+
+You can install addons in two ways: by pasting a direct addon URL, or by browsing the built-in community catalog and installing from there.
+
+## Install by URL
+
+If you already have an addon's manifest URL, you can install it directly.
+
+<Steps>
+  <Step title="Open the Addons page">
+    Select **Addons** from the sidebar navigation. The page opens showing your currently installed addons.
+  </Step>
+  <Step title="Open the Add Addon dialog">
+    Click the **+ Add addon** button in the top toolbar. A dialog appears with a URL input field.
+  </Step>
+  <Step title="Paste the addon URL">
+    Paste the addon's transport URL (ending in `manifest.json`) into the input field and press **Enter** or click **Add**.
+  </Step>
+  <Step title="Review the addon details">
+    Stremio fetches the manifest from the URL and opens the **Addon Details** modal. You can review the addon's name, description, version, supported content types, and transport URL before committing.
+  </Step>
+  <Step title="Install the addon">
+    Click **Install** in the modal. If the addon requires configuration first, you will see a **Configure** button instead — click it to complete setup on the addon's configuration page before installing.
+  </Step>
+</Steps>
+
+<Note>
+  If Stremio cannot reach the manifest URL, the details modal shows a loading error. Check that the URL is correct and the addon server is reachable.
+</Note>
+
+## Browse the community catalog
+
+Stremio includes a built-in community addon catalog that lists publicly available addons.
+
+<Steps>
+  <Step title="Open the Addons page">
+    Select **Addons** from the sidebar navigation.
+  </Step>
+  <Step title="Select a remote catalog">
+    Use the **Catalog** dropdown to switch from your installed addons to a remote catalog. The community catalog entries appear alongside your installed addons list.
+  </Step>
+  <Step title="Filter by type">
+    Use the **Type** dropdown to narrow the list to a specific content type such as movies, series, or channels.
+  </Step>
+  <Step title="Search for an addon">
+    Type in the search bar to filter addons by name or description.
+  </Step>
+  <Step title="Install from the catalog">
+    Click **Install** on any addon card, or click the card itself to open the details modal first. Confirm the installation in the modal.
+  </Step>
+</Steps>
+
+## What happens after installation
+
+Once an addon is installed:
+
+- **Catalogs** it provides appear in the **Discover** page's catalog dropdown and in the **Board** content rows.
+- **Streams** it resolves appear automatically on any metadata page for a matching title.
+- **Subtitles** it provides become available in the player's subtitle selector during playback.
+
+<Tip>
+  After installing a new catalog addon, navigate to **Discover** and select the addon's catalog from the dropdown to start browsing its content.
+</Tip>
+
+## Configurable addons
+
+Some addons require configuration before they work. These addons are marked with **Configure** instead of **Install**.
+
+<Steps>
+  <Step title="Click Configure">
+    Click the **Configure** button on the addon card or in the details modal. Stremio opens the addon's configuration page in your browser.
+  </Step>
+  <Step title="Complete setup">
+    Follow the addon's instructions — this typically involves entering an API key, selecting a server, or logging in to a third-party service.
+  </Step>
+  <Step title="Install the configured addon">
+    The addon's configuration page usually provides a direct install link or button. Click it to complete installation.
+  </Step>
+</Steps>
+
+<Info>
+  Addons that are already installed but support optional configuration show both a **Configure** button and an **Uninstall** button.
+</Info>
+
+## Sharing an addon
+
+Every installed addon has a **Share** button. Clicking it opens a dialog with the addon's transport URL that you can copy and send to others. The recipient can paste it into the **Add Addon** dialog to install the same addon.

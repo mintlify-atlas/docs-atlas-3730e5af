@@ -1,0 +1,160 @@
+---
+title: Player settings
+description: Configure subtitles, audio, seek duration, auto-play behavior, external players, and advanced playback options in Stremio.
+---
+
+Player settings are found in **Settings → Player**. They are grouped into four categories: Subtitles, Audio, Controls, and Auto-play, with an Advanced section for power-user options.
+
+## Subtitles
+
+### Default subtitle language
+
+Sets the subtitle language Stremio selects automatically when opening a video. Set to **None** to disable automatic subtitle selection.
+
+### Subtitle size
+
+Scales subtitle text relative to the default size. Available values:
+
+| Size | Display |
+|------|--------|
+| 75 | 75% |
+| 100 | 100% (default) |
+| 125 | 125% |
+| 150 | 150% |
+| 175 | 175% |
+| 200 | 200% |
+| 250 | 250% |
+
+### Subtitle colors
+
+Three color pickers let you customize the appearance of subtitle text:
+
+| Setting | Description |
+|---------|-------------|
+| Text color | The color of the subtitle characters. |
+| Background color | The color of the box drawn behind subtitle text. |
+| Outline color | The color of the outline drawn around subtitle characters. |
+
+### ASS subtitle styling
+
+When enabled, Stremio honors the styling defined inside Advanced SubStation Alpha (`.ass`) subtitle files, such as custom fonts, positions, and colors. When disabled, the app applies your color and size settings to all subtitles regardless of the embedded style. Desktop only.
+
+## Audio
+
+### Default audio track
+
+Sets the audio language Stremio selects automatically when a video has multiple audio tracks.
+
+### Surround sound
+
+When enabled, Stremio passes multi-channel audio (5.1, 7.1) through to your audio device without downmixing. Enable this if your setup supports surround sound output.
+
+## Controls
+
+### Seek duration
+
+The number of seconds to skip forward or backward when pressing the arrow keys during playback. Available values:
+
+| Duration |
+|----------|
+| 3 seconds |
+| 5 seconds |
+| 10 seconds |
+| 15 seconds |
+| 20 seconds |
+| 30 seconds |
+
+A **short seek** is triggered by `←` / `→`. A **long seek** (Shift seek) uses a separately configurable duration from the same set of values, triggered by `Shift` + `←` / `Shift` + `→`.
+
+### Play in background
+
+When enabled, playback continues when the Stremio window loses focus. This option is currently disabled.
+
+## Auto-play
+
+### Auto-play (binge watching)
+
+When enabled, Stremio automatically starts the next episode when the current one ends. This applies to series content with a next episode available.
+
+### Next video popup duration
+
+How long before the end of an episode the "next video" popup appears. Set to **Disabled** to turn off the popup entirely.
+
+Available durations (in seconds):
+
+`Disabled`, `5`, `10`, `15`, `20`, `25`, `30`, `35`, `40`, `45`, `50`, `55`, `60`, `65`, `70`, `75`, `80`, `85`, `90`
+
+## Advanced
+
+### External player
+
+Open streams in a third-party player application instead of the built-in Stremio player. The available options depend on your platform.
+
+<Tabs>
+  <Tab title="Android">
+    | Player | Value |
+    |--------|-------|
+    | Disabled (use built-in) | — |
+    | Allow choosing | System app picker |
+    | VLC | `vlc` |
+    | MX Player | `mxplayer` |
+    | Just Player | `justplayer` |
+    | M3U Playlist | `m3u` |
+  </Tab>
+  <Tab title="iOS">
+    | Player | Value |
+    |--------|-------|
+    | Disabled (use built-in) | — |
+    | VLC | `vlc` |
+    | Outplayer | `outplayer` |
+    | Infuse | `infuse` |
+    | Vidhub | `vidhub` |
+    | M3U Playlist | `m3u` |
+  </Tab>
+  <Tab title="visionOS">
+    | Player | Value |
+    |--------|-------|
+    | Disabled (use built-in) | — |
+    | VLC | `vlc` |
+    | Outplayer | `outplayer` |
+    | Moonplayer | `moonplayer` |
+    | Infuse | `infuse` |
+    | M3U Playlist | `m3u` |
+  </Tab>
+  <Tab title="macOS">
+    | Player | Value |
+    |--------|-------|
+    | Disabled (use built-in) | — |
+    | MPV | `mpv` |
+    | IINA | `iina` |
+    | Infuse | `infuse` |
+    | M3U Playlist | `m3u` |
+  </Tab>
+  <Tab title="Windows / Linux">
+    | Player | Value |
+    |--------|-------|
+    | Disabled (use built-in) | — |
+    | M3U Playlist | `m3u` |
+  </Tab>
+</Tabs>
+
+<Tip>
+  The **M3U Playlist** option generates a playlist file that any compatible media player can open, including VLC on desktop.
+</Tip>
+
+### Hardware decoding
+
+When enabled, Stremio uses the GPU hardware decoder (DXVA2, VideoToolbox, VAAPI, etc.) for video decoding instead of software decoding. This reduces CPU usage and improves playback performance for high-resolution content. Desktop only.
+
+### Video mode
+
+Controls the video rendering pipeline used by the player. Available on Windows only.
+
+| Mode | Description |
+|------|-------------|
+| Default | Standard rendering pipeline. |
+| Legacy | Alternative pipeline for compatibility with older drivers or hardware. |
+
+### Pause on minimize
+
+When enabled, playback pauses automatically when the Stremio window is minimized. Desktop only.

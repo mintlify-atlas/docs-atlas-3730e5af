@@ -1,0 +1,84 @@
+---
+title: Library
+description: Your personal collection of saved titles, with sorting, filtering by type, and a dedicated Continue Watching view.
+---
+
+The Library is your personal catalog of every title you have added to Stremio. It persists across devices when you are signed in and serves as the source of truth for watch progress, notification tracking, and the Continue Watching row on the Board.
+
+## What gets saved to your library
+
+A title is added to your library in two ways:
+
+- **Manually** — click **Add to library** on any metadata page or in the Discover preview panel.
+- **Automatically** — Stremio adds a title to your library the first time you play it, so watch progress is always tracked.
+
+<Note>
+  Library data is associated with your Stremio account. Sign in on any device to access your full library and resume watching from where you left off.
+</Note>
+
+## Browsing your library
+
+<Steps>
+  <Step title="Open the Library page">
+    Select **Library** from the sidebar navigation.
+  </Step>
+  <Step title="Filter by type">
+    Use the **Type** dropdown to show only a specific content type — movies, series, channels, and more. Select **All** to see everything.
+  </Step>
+  <Step title="Sort the results">
+    Use the sort chips below the type selector to order your library. Available sort options include by last watched, by name, and by date added.
+  </Step>
+  <Step title="Open a title">
+    Click any item to open its metadata page where you can pick a stream and continue watching.
+  </Step>
+  <Step title="Remove a title">
+    Each item in the Library view has a remove option. Removing a title deletes it from your library but does not affect playback history.
+  </Step>
+</Steps>
+
+## Continue Watching view
+
+The Continue Watching view is a filtered subset of your library that shows only titles with saved progress. You can access it from the sidebar or from the dedicated row on the Board.
+
+<Info>
+  The Continue Watching view uses the same underlying data as the Library. Items here also appear in your full Library list.
+</Info>
+
+## Content types
+
+The Library supports all content types that addons can provide:
+
+| Type | Icon |
+|------|------|
+| Movie | Movies |
+| Series | Series |
+| Channel | Channels |
+| TV | TV |
+| Music | Music |
+| Radio | Radio |
+| Podcast | Podcast |
+| Game | Game |
+| Book | Book |
+
+## Syncing across devices
+
+When you are signed in, your library state — including which titles are saved, watch timestamps, and episode progress — is synced through Stremio's cloud backend.
+
+<AccordionGroup>
+  <Accordion title="What syncs">
+    - Titles added or removed from the library
+    - Playback position (timestamp) for each title
+    - Last-watched episode for series
+    - Subtitle and audio track preferences per stream
+  </Accordion>
+  <Accordion title="What does not sync">
+    Local subtitle files you drag into the player are session-only and are not uploaded to the cloud.
+  </Accordion>
+  <Accordion title="Offline behavior">
+    If Stremio cannot reach the sync server, your library is still available locally from the last successful sync. Changes made offline are queued and applied when connectivity is restored.
+  </Accordion>
+</AccordionGroup>
+
+## Sign-in required
+
+If you open the Library page without being signed in, a placeholder screen prompts you to log in or create an account. All library features require an active Stremio account.

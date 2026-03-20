@@ -1,0 +1,83 @@
+---
+title: Quickstart
+description: Get Stremio Web running on your machine in under five minutes.
+---
+
+This guide walks you through cloning the repository and starting the development server.
+
+## Prerequisites
+
+Before you begin, make sure you have the following installed:
+
+| Tool | Required version | Notes |
+|------|-----------------|-------|
+| Node.js | 20.x | See `.nvmrc` — use `nvm use` to switch automatically |
+| pnpm | 10 or higher | [Installation guide](https://pnpm.io/installation) |
+
+<Tip>
+  If you use nvm, run `nvm use` in the project root to switch to Node 20 automatically.
+</Tip>
+
+## Get running locally
+
+<Steps>
+  <Step title="Clone the repository">
+    ```bash
+    git clone https://github.com/Stremio/stremio-web.git
+    cd stremio-web
+    ```
+  </Step>
+
+  <Step title="Install dependencies">
+    ```bash
+    pnpm install
+    ```
+
+    pnpm resolves dependencies from `pnpm-lock.yaml`. This typically takes 30–60 seconds on first run.
+  </Step>
+
+  <Step title="Start the development server">
+    ```bash
+    pnpm start
+    ```
+
+    This runs `webpack serve --mode development` and starts an HTTPS dev server on all interfaces (`0.0.0.0`).
+
+    <Note>
+      The dev server uses HTTPS by default. Your browser will show a certificate warning for `localhost` — this is expected. Accept the warning to proceed.
+    </Note>
+  </Step>
+
+  <Step title="Open the app in your browser">
+    Navigate to:
+
+    ```
+    https://localhost:8080
+    ```
+
+    You should see the Stremio Web interface load. If it prompts you to connect to a Stremio Core service, that means the frontend is working correctly.
+  </Step>
+</Steps>
+
+## What to expect
+
+After the dev server starts, you'll have:
+
+- **Hot-module-free live builds** — Webpack rebuilds on file changes (live reload is disabled; refresh the page manually).
+- **Source maps** — `eval-source-map` is enabled in development for easier debugging.
+- **Debug mode** — The `DEBUG` environment variable is set to `true`, which enables additional logging.
+
+<Warning>
+  Stremio Web connects to Stremio Core to load catalogs and streams. Without a running Core instance the UI will open but content will not load.
+</Warning>
+
+## Next steps
+
+<CardGroup cols={2}>
+  <Card title="Installation options" icon="download" href="/getting-started/installation">
+    Production builds, Docker, and advanced setup
+  </Card>
+  <Card title="Contributing" icon="code" href="/contributing/overview">
+    Learn how to contribute to the codebase
+  </Card>
+</CardGroup>

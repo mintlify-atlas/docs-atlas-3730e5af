@@ -1,0 +1,89 @@
+---
+title: Introduction
+description: Stremio Web is an open-source, browser-based media center for discovering, watching, and organizing video content.
+---
+
+Stremio Web is the browser-based frontend of the Stremio ecosystem. Built with React 18, it connects to a **Stremio Core** service to give you a full media center experience — without installing a native app.
+
+<Info>
+  Stremio Web requires a running Stremio Core instance (the desktop app or a self-hosted streaming server) to load and play content.
+</Info>
+
+## How Stremio works
+
+The Stremio ecosystem is made up of three layers that work together:
+
+```
+Browser (Stremio Web)
+    │
+    ▼ WebSocket / HTTP
+Stremio Core (local or remote)
+    │
+    ▼ Stremio Protocol
+Addons (community-built)
+    │
+    ▼
+Content sources (IMDB, YouTube, torrents, etc.)
+```
+
+| Layer | Role |
+|-------|------|
+| **Stremio Web** | React UI running in the browser |
+| **Stremio Core** | Handles streams, metadata, and addon resolution |
+| **Addons** | Provide catalogs and streams via the Stremio Protocol |
+
+## Key features
+
+<CardGroup cols={3}>
+  <Card title="Board" icon="house" href="/features/board">
+    Personalized home screen with recommendations and continue-watching rows
+  </Card>
+  <Card title="Discover" icon="compass" href="/features/discover">
+    Browse catalogs from installed addons by genre, type, and more
+  </Card>
+  <Card title="Library" icon="bookmark" href="/features/library">
+    Track watched and saved content across all sources
+  </Card>
+  <Card title="Player" icon="circle-play" href="/features/player">
+    Built-in video player with subtitle support and external player options
+  </Card>
+  <Card title="Addons" icon="puzzle-piece" href="/addons/overview">
+    Install community addons to unlock new content sources
+  </Card>
+  <Card title="Chromecast" icon="cast" href="/configuration/settings">
+    Cast any stream to your TV with Google Chromecast
+  </Card>
+  <Card title="Calendar" icon="calendar" href="/features/calendar">
+    Track upcoming episodes and new releases
+  </Card>
+  <Card title="Search" icon="magnifying-glass" href="/features/search">
+    Search across all installed addons simultaneously
+  </Card>
+  <Card title="PWA support" icon="mobile" href="/deployment/self-hosting">
+    Install as a Progressive Web App on any device
+  </Card>
+</CardGroup>
+
+## Tech stack
+
+Stremio Web is version `5.0.0-beta.32` and is built with:
+
+- **React 18** — UI framework
+- **TypeScript & JavaScript** — type-safe source code
+- **Less** — component styling
+- **Webpack 5** — bundler with service worker support (Workbox)
+- **stremio-core-web** — WebAssembly core that powers data fetching and state
+- **i18next** — internationalization
+
+## Open source
+
+Stremio Web is released under the **GPLv2** license and maintained by Smart Code OOD. You can browse the source, file issues, and contribute on GitHub.
+
+<CardGroup cols={2}>
+  <Card title="Quickstart" icon="rocket" href="/getting-started/quickstart">
+    Run Stremio Web locally in a few commands
+  </Card>
+  <Card title="Installation" icon="download" href="/getting-started/installation">
+    Explore all installation options including Docker
+  </Card>
+</CardGroup>

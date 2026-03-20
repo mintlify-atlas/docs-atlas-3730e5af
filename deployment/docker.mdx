@@ -1,0 +1,74 @@
+---
+title: Docker deployment
+description: Build and run Stremio Web using Docker.
+---
+
+The Stremio Web repository includes a multi-stage `Dockerfile` that builds the app and packages it with a lightweight Express server. The final image serves the app on port `8080`.
+
+## How the build works
+
+The `Dockerfile` uses three stages:
+
+| Stage | Base | Purpose |
+|-------|------|---------|
+| `base` | `node:20-alpine` | Shared foundation — enables pnpm via corepack, installs git |
+| `app` | `base` | Installs dependencies and runs the webpack production build |
+| `server` | `base` | Installs Express 4 in isolation |
+| _(final)_ | `base` | Combines the `build/` output and `node_modules` from prior stages, exposes port 8080 |
+
+The `app` stage copies only `package.json` and `pnpm-lock.yaml` first, so dependency installation is cached separately from source changes.
+
+<Warning>
+The webpack config runs `git rev-parse HEAD` at build time to embed the commit hash in asset paths. You must include the `.git` directory when building, or pass the repository context to `docker build`. Building from an archive without git history will fail.
+</Warning>
+
+## Building the image
+
+Run from the repository root (where the `Dockerfile` lives):
+
+```bash
+docker build -t stremio-web .
+```
+
+To use a different Node.js version, pass the `NODE_VERSION` build argument:
+
+```bash
+docker build --build-arg NODE_VERSION=20-alpine -t stremio-web .
+```
+
+The default value is `20-alpine`, matching the Node version in `.nvmrc`.
+
+## Running the container
+
+```bash
+docker run -p 8080:8080 stremio-web
+```
+
+The app is then available at `http://localhost:8080`.
+
+## HTTP caching
+
+The bundled `http_server.js` sets `Cache-Control` headers automatically:
+
+| Resource | `max-age` | Seconds |
+|----------|-----------|---------|
+| `index.html` | ~2 hours | `7200` |
+| All other assets | ~1 month | `2629744` |
+
+All assets other than `index.html` are fingerprinted with the commit hash (e.g. `/<hash>/scripts/main.js`), so they are safe to cache aggressively. The short TTL on `index.html` ensures clients pick up new deployments quickly.
+
+## Environment variables
+
+The following variables can be injected at **build time** via webpack's `EnvironmentPlugin`. Pass them as `--env KEY=VALUE` flags to the webpack CLI, or set them in the shell before calling `docker build`.
+
+| Variable | Default | Description |
+|----------|---------|-------------|
+| `SENTRY_DSN` | `null` | Sentry DSN for error reporting. Leave unset to disable. |
+| `SERVICE_WORKER_DISABLED` | `false` | Set to `true` to skip service-worker registration. |
+| `DEBUG` | `false` in production | Enables debug output. Automatically `true` in development mode. |
+| `VERSION` | value from `package.json` | App version string embedded in the build. |
+| `COMMIT_HASH` | output of `git rev-parse HEAD` | Injected automatically; used as asset path prefix. |
+
+<Note>
+These variables are baked into the static bundle at build time. They are not read at container runtime and cannot be changed by setting environment variables on the running container.
+</Note>

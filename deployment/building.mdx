@@ -1,0 +1,124 @@
+---
+title: Building from source
+description: Build Stremio Web locally using pnpm and webpack.
+---
+
+## Prerequisites
+
+Before building, make sure you have the following installed:
+
+- **Node.js 20** — the version specified in `.nvmrc`. Use [nvm](https://github.com/nvm-sh/nvm) or any Node version manager.
+- **pnpm** — enabled via corepack (`corepack enable`)
+- **Git** — required at build time; webpack runs `git rev-parse HEAD` to embed the commit hash in asset paths
+
+<Warning>
+The build will fail if the repository is not a git checkout with a valid `HEAD`. Building from a downloaded ZIP archive is not supported without modification.
+</Warning>
+
+## Setup
+
+<Steps>
+  <Step title="Clone the repository">
+    ```bash
+    git clone https://github.com/stremio/stremio-web.git
+    cd stremio-web
+    ```
+  </Step>
+
+  <Step title="Enable pnpm">
+    ```bash
+    corepack enable
+    ```
+  </Step>
+
+  <Step title="Install dependencies">
+    ```bash
+    pnpm install
+    ```
+
+    The lockfile is committed — this installs exact versions for a reproducible build.
+  </Step>
+
+  <Step title="Run a build">
+    <CodeGroup>
+
+    ```bash Production build
+    pnpm run build
+    ```
+
+    ```bash Development server
+    pnpm start
+    ```
+
+    </CodeGroup>
+
+    The production build writes output to the `build/` directory. The development server starts a local HTTPS server on `0.0.0.0` using `webpack-dev-server`.
+  </Step>
+</Steps>
+
+## Build output
+
+After a successful production build, the `build/` directory contains:
+
+```
+build/
+├── index.html                        # App entry point
+├── manifest.json                     # Web app manifest (PWA)
+├── favicons/                         # Favicon assets
+├── images/                           # Static image assets
+├── screenshots/                      # PWA store screenshots
+├── fonts/                            # Font files (.ttf)
+├── .well-known/                      # Well-known resource files
+└── <commit-hash>/
+    ├── scripts/
+    │   ├── main.js                   # Bundled application
+    │   └── worker.js                 # Stremio Core web worker
+    ├── styles/
+    │   └── main.css                  # Extracted CSS
+    └── binaries/
+        └── *.wasm                    # WebAssembly binaries
+```
+
+All scripts, styles, and WASM files are nested under the commit hash. This path prefix makes long-term caching safe — each deployment produces paths that have never been served before.
+
+## webpack environment variables
+
+The following variables can be passed to webpack at build time using `--env`:
+
+```bash
+pnpm run build --env SENTRY_DSN=https://your-dsn@sentry.io/123
+```
+
+| Variable | Default | Description |
+|----------|---------|-------------|
+| `SENTRY_DSN` | `null` | Sentry DSN for error reporting. Omit to disable. |
+| `SERVICE_WORKER_DISABLED` | `false` | Disable service worker registration. |
+| `DEBUG` | `false` (production), `true` (development) | Enable debug output. |
+| `VERSION` | `package.json` `version` field | App version string. |
+| `COMMIT_HASH` | `git rev-parse HEAD` | Embedded automatically; not normally overridden. |
+
+<Note>
+All variables are resolved at build time and baked into the static bundle. They cannot be changed at runtime without rebuilding.
+</Note>
+
+## Development server
+
+The dev server is configured in `webpack.config.js`:
+
+- Binds to `0.0.0.0` (all interfaces)
+- Uses **HTTPS** — required because `stremio-core-web` uses APIs (such as `SharedArrayBuffer`) that need a secure context
+- Hot reload and live reload are disabled; restart the server to pick up changes to config
+
+```bash
+pnpm start
+```
+
+The dev server does not produce files on disk. Use `pnpm run build` when you need a deployable artifact.
+
+<Tip>
+To run the dev server in production mode (minified output, service worker enabled):
+
+```bash
+pnpm run start-prod
+```
+</Tip>

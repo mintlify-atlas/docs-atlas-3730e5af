@@ -1,0 +1,118 @@
+---
+title: 'Series'
+description: 'Content type specification for series in Stremio Web, including priority, season/episode structure, and Calendar integration.'
+---
+
+The `series` type represents episodic TV content. It is the second-highest priority content type and is the only type that integrates with the Calendar view.
+
+## Type identifier
+
+```javascript
+'series'
+```
+
+## Priority
+
+`series` has a priority value of **9**:
+
+```javascript
+// From CONSTANTS.js
+const TYPE_PRIORITIES = {
+    movie: 10,
+    series: 9,
+    // ...
+};
+```
+
+## Icon
+
+The icon key for series is `'series'`:
+
+```javascript
+const ICON_FOR_TYPE = new Map([
+    ['series', 'series'],
+    // ...
+]);
+```
+
+## Metadata fields
+
+Series share all top-level meta fields with movies (`id`, `type`, `name`, `poster`, `background`, `logo`, `description`, `releaseInfo`, `genres`, `cast`, `imdbRating`, `links`). The key distinction is the `videos` array.
+
+<ResponseField name="type" type="string" required>
+  Must be `'series'`.
+</ResponseField>
+
+<ResponseField name="videos" type="Video[]">
+  Ordered list of episodes. Each video object describes a single episode:
+
+  <ResponseField name="videos[].id" type="string" required>
+    Unique episode identifier (e.g., `'tt0111161:1:1'` for season 1, episode 1 of an IMDB title).
+  </ResponseField>
+
+  <ResponseField name="videos[].title" type="string">
+    Episode title.
+  </ResponseField>
+
+  <ResponseField name="videos[].season" type="number">
+    Season number. Season `0` conventionally represents specials.
+  </ResponseField>
+
+  <ResponseField name="videos[].episode" type="number">
+    Episode number within the season.
+  </ResponseField>
+
+  <ResponseField name="videos[].released" type="string">
+    ISO 8601 release date string (e.g., `'2023-09-15T00:00:00.000Z'`). Used by the Calendar view to place the episode on the correct date.
+  </ResponseField>
+
+  <ResponseField name="videos[].thumbnail" type="string">
+    URL to an episode thumbnail image.
+  </ResponseField>
+
+  <ResponseField name="videos[].overview" type="string">
+    Episode plot summary.
+  </ResponseField>
+</ResponseField>
+
+## Season and episode structure
+
+Episodes are grouped by `season` number in the detail page UI. The UI renders a season selector, and within each season, episodes are listed in order of their `episode` number.
+
+```
+Series
+└── Season 1
+│   ├── Episode 1
+│   ├── Episode 2
+│   └── ...
+└── Season 2
+    └── ...
+```
+
+<Note>
+  Season `0` is treated as a special season ("Specials" or "Extras") and may be rendered separately from numbered seasons depending on the UI implementation.
+</Note>
+
+## UI surfaces
+
+<AccordionGroup>
+  <Accordion title="Discover">
+    Series appear in Discover when add-ons provide series catalogs. The type selector places `series` second after `movie` based on its priority of 9.
+  </Accordion>
+
+  <Accordion title="Detail page">
+    The series detail page (`#/detail/series/{id}`) renders a season selector and episode list. Selecting an episode fetches streams for that specific `video.id`.
+  </Accordion>
+
+  <Accordion title="Calendar">
+    The Calendar view exclusively uses the `series` type. It reads `videos[].released` dates to plot upcoming and recent episode air dates. Only series in the user's library appear on the Calendar.
+  </Accordion>
+
+  <Accordion title="Library">
+    Series in the library track the last watched episode. The library card may show the next unwatched episode number.
+  </Accordion>
+</AccordionGroup>
+
+<Info>
+  The Calendar is the only UI surface that is specific to the `series` type. The keyboard shortcut `4` navigates directly to `#/calendar`.
+</Info>

@@ -1,0 +1,345 @@
+---
+title: Components reference
+description: All shared UI components exported from src/components/index.ts, grouped by category with key props and usage patterns.
+---
+
+All shared components are exported from `src/components/index.ts`. Import them from the `stremio/components` alias:
+
+```typescript
+import { MetaItem, MetaRow, MetaPreview, Video } from 'stremio/components';
+```
+
+<Info>
+These components are internal to the application. They are not published as a standalone package.
+</Info>
+
+## Navigation
+
+### MainNavBars
+
+**File:** `src/components/MainNavBars/MainNavBars.tsx`
+
+The primary application shell layout. Renders a `HorizontalNavBar` across the top, a `VerticalNavBar` on the left, and a content area for children.
+
+```typescript
+<MainNavBars route="board" query="">
+    {/* page content */}
+</MainNavBars>
+```
+
+**Props:**
+
+| Prop | Type | Description |
+|---|---|---|
+| `className` | `string` | Additional CSS class |
+| `route` | `string` | Active route ID used to highlight the correct vertical nav tab |
+| `query` | `string` | Search query forwarded to the horizontal nav bar |
+| `children` | `ReactNode` | Page content rendered inside the nav layout |
+
+**Vertical nav tabs defined in `MainNavBars.tsx`:**
+
+| ID | Label | Href |
+|---|---|---|
+| `board` | Board | `#/` |
+| `discover` | Discover | `#/discover` |
+| `library` | Library | `#/library` |
+| `calendar` | Calendar | `#/calendar` |
+| `addons` | ADDONS | `#/addons` |
+| `settings` | SETTINGS | `#/settings` |
+
+### HorizontalNavBar / VerticalNavBar
+
+**File:** `src/components/NavBar/`
+
+Low-level navigation bar primitives consumed by `MainNavBars`. Can also be used independently for custom layouts.
+
+`HorizontalNavBar` props include `route`, `query`, `backButton`, `searchBar`, `fullscreenButton`, and `navMenu`.
+
+`VerticalNavBar` accepts a `tabs` array and a `selected` route ID.
+
+### SearchBar
+
+**File:** `src/components/SearchBar/`
+
+Search input component used inside the horizontal nav bar. Manages its own local input state and debounces changes.
+
+---
+
+## Media display
+
+### MetaItem
+
+**File:** `src/components/MetaItem/MetaItem.js`
+
+A single content card — the fundamental unit for displaying movies, series, channels, and other media items in grids and rows.
+
+```javascript
+<MetaItem
+    type="movie"
+    name="The Dark Knight"
+    poster="https://..."
+    posterShape="poster"
+    progress={42}
+    deepLinks={{ metaDetailsVideos: '#/metadetails/movie/tt0468569' }}
+/>
+```
+
+**Key props:**
+
+| Prop | Type | Description |
+|---|---|---|
+| `type` | `string` | Content type (`movie`, `series`, `channel`, etc.) Used for fallback icon |
+| `name` | `string` | Item title displayed below the poster |
+| `poster` | `string` | Poster image URL |
+| `posterShape` | `'poster' \| 'landscape' \| 'square'` | Aspect ratio of the poster container |
+| `posterChangeCursor` | `boolean` | Show a pointer cursor on the poster |
+| `progress` | `number` | Watch progress percentage (0–100). Shows a progress bar |
+| `newVideos` | `number` | Count of new unwatched videos. Shows a badge overlay |
+| `watched` | `boolean` | Whether the item is fully watched. Shows a checkmark overlay |
+| `options` | `array` | Context menu options shown in a three-dot menu |
+| `deepLinks` | `object` | Navigation links. The component prefers `metaDetailsStreams`, then `metaDetailsVideos`, then `player` |
+| `dataset` | `object` | Arbitrary data passed back in `optionOnSelect` |
+| `optionOnSelect` | `function` | Called when a context menu option is selected |
+| `onDismissClick` | `function` | Renders a dismiss (×) button when provided |
+| `onPlayClick` | `function` | Renders a play button when provided |
+
+### MetaRow
+
+**File:** `src/components/MetaRow/MetaRow.js`
+
+A labelled horizontal row of `MetaItem` cards, used to display a catalog preview on the Board and Discover screens.
+
+```javascript
+<MetaRow
+    title="Top movies"
+    catalog={catalog}
+    itemComponent={MetaItem}
+/>
+```
+
+**Key props:**
+
+| Prop | Type | Description |
+|---|---|---|
+| `title` | `string` | Override for the row title. Defaults to the catalog's own title |
+| `catalog` | `object` | Catalog object from core state. Provides items, deep links, and title |
+| `itemComponent` | `ElementType` | Component used to render each item (usually `MetaItem`) |
+| `message` | `string` | Replaces the item list with a message string (e.g. for empty or error states) |
+| `notifications` | `object` | Notification counts forwarded to each item |
+
+Displays up to `CONSTANTS.CATALOG_PREVIEW_SIZE` items. Renders a "See all" button when the catalog has a `deepLinks.discover` or `deepLinks.library` URL.
+
+### MetaPreview
+
+**File:** `src/components/MetaPreview/MetaPreview.js`
+
+The detail panel shown on the right side of the MetaDetails route — title, logo, background, description, links, ratings, and action buttons.
+
+**Key props:**
+
+| Prop | Type | Description |
+|---|---|---|
+| `compact` | `boolean` | Renders a compact layout without background image |
+| `name` | `string` | Content title |
+| `logo` | `string` | Logo image URL |
+| `background` | `string` | Background image URL |
+| `runtime` | `string` | Duration string (e.g. `"142 min"`) |
+| `releaseInfo` | `string` | Release year or year range |
+| `released` | `string` | ISO date string |
+| `description` | `string` | Plot description |
+| `deepLinks` | `object` | Navigation links for the watch/play action |
+| `links` | `array` | Structured links (IMDB, genres, cast, etc.) rendered as `MetaLinks` |
+| `trailerStreams` | `array` | Trailer stream objects |
+| `inLibrary` | `boolean` | Whether the item is in the user's library |
+| `toggleInLibrary` | `function` | Called when the user clicks add/remove library |
+| `ratingInfo` | `object` | Rating data rendered by the `Ratings` sub-component |
+
+### Video
+
+**File:** `src/components/Video/Video.js`
+
+An episode/video list item used inside the MetaDetails route. Handles spoiler blurring, watched state, progress, and a context menu for per-video and per-season actions.
+
+**Key props:**
+
+| Prop | Type | Description |
+|---|---|---|
+| `id` | `string` | Video identifier |
+| `title` | `string` | Video title |
+| `thumbnail` | `string` | Thumbnail URL |
+| `season` | `number` | Season number |
+| `episode` | `number` | Episode number |
+| `released` | `string` | Release date |
+| `upcoming` | `boolean` | Whether the episode has not aired yet |
+| `watched` | `boolean` | Watched state |
+| `progress` | `number` | Watch progress (0–100) |
+| `scheduled` | `boolean` | Whether the episode is in the user's calendar |
+| `seasonWatched` | `boolean` | Whether the entire season is watched |
+| `selected` | `boolean` | Whether this video is the currently selected one (scrolls into view) |
+| `deepLinks` | `object` | Links for player and meta details navigation |
+| `onMarkVideoAsWatched` | `function` | Called with `(id, released, watched)` |
+| `onMarkSeasonAsWatched` | `function` | Called with `(season, seasonWatched)` |
+
+Thumbnail spoiler blurring is controlled by `profile.settings.hideSpoilers` — thumbnails are blurred for unwatched episodes when the setting is enabled.
+
+### LibItem
+
+**File:** `src/components/LibItem/`
+
+Library item card. Similar to `MetaItem` but with library-specific actions and layout.
+
+### ContinueWatchingItem
+
+**File:** `src/components/ContinueWatchingItem/`
+
+Variant of a media card used in the Continue Watching section. Includes dismiss and play actions.
+
+### Image
+
+**File:** `src/components/Image/`
+
+Image component with a `renderFallback` prop. Renders the fallback when the image fails to load or is absent.
+
+---
+
+## Input
+
+### Button
+
+**File:** `src/components/Button/`
+
+Base interactive element. Renders as an `<a>` when `href` is provided, otherwise as a `<div>` with keyboard and pointer event handling.
+
+### TextInput
+
+**File:** `src/components/TextInput/`
+
+Styled text input with change and submit handlers.
+
+### NumberInput
+
+**File:** `src/components/NumberInput/`
+
+Numeric input with increment/decrement controls.
+
+### Checkbox
+
+**File:** `src/components/Checkbox/`
+
+Boolean toggle rendered as a checkbox.
+
+### RadioButton
+
+**File:** `src/components/RadioButton/`
+
+Single-selection radio button.
+
+### Toggle
+
+**File:** `src/components/Toggle/`
+
+On/off switch rendered as a sliding toggle.
+
+### Slider
+
+**File:** `src/components/Slider/`
+
+Horizontal range slider.
+
+### ColorInput
+
+**File:** `src/components/ColorInput/`
+
+Color picker input.
+
+### Multiselect
+
+**File:** `src/components/Multiselect/`
+
+Dropdown menu that supports single or multi-selection. Used for context menus on `MetaItem` and `Video`.
+
+### MultiselectMenu
+
+**File:** `src/components/MultiselectMenu/`
+
+The dropdown panel rendered by `Multiselect`.
+
+### Chips
+
+**File:** `src/components/Chips/`
+
+Horizontal list of selectable filter chips.
+
+---
+
+## Overlay and modal
+
+### ModalDialog
+
+**File:** `src/components/ModalDialog/`
+
+General-purpose modal dialog with a title and close button. Renders via the `Modal` portal system, locking focus inside the dialog.
+
+### Popup
+
+**File:** `src/components/Popup/`
+
+Anchored popup panel. Used for context menus and dropdowns that must appear near a trigger element.
+
+### BottomSheet
+
+**File:** `src/components/BottomSheet/`
+
+Mobile-style bottom sheet that slides up from the bottom of the screen.
+
+### ContextMenu
+
+**File:** `src/components/ContextMenu/`
+
+Right-click context menu rendered at the cursor position.
+
+### AddonDetailsModal
+
+**File:** `src/components/AddonDetailsModal/`
+
+Modal that shows full details for an addon — description, version, catalogs, and install/remove actions.
+
+### EventModal
+
+**File:** `src/components/EventModal/`
+
+Modal variant for calendar events.
+
+### SharePrompt
+
+**File:** `src/components/SharePrompt/`
+
+Modal prompt for sharing a content link.
+
+---
+
+## Layout and utility
+
+### HorizontalScroll
+
+**File:** `src/components/HorizontalScroll/`
+
+Container that enables horizontal scrolling with mouse wheel and pointer drag support.
+
+### DelayedRenderer
+
+**File:** `src/components/DelayedRenderer/`
+
+Defers rendering of its children until after a configurable delay. Used to avoid rendering off-screen content on initial mount.
+
+### Transition
+
+**File:** `src/components/Transition/`
+
+CSS transition wrapper for mount/unmount animations.
+
+### ShortcutsGroup
+
+**File:** `src/components/ShortcutsGroup/`
+
+Displays a labelled group of keyboard shortcuts. Used inside the shortcuts modal opened by the `shortcuts` keyboard action.

@@ -1,0 +1,280 @@
+---
+title: Routing
+description: How Stremio Web's custom hash-based router works, including route layers, URL patterns, modal routes, and programmatic navigation.
+---
+
+Stremio Web uses a custom router (`src/router/`) rather than a third-party routing library. Navigation is driven entirely by `window.location.hash`.
+
+## How the router works
+
+The `Router` component (`src/router/Router/Router.js`) listens for `hashchange` events. On every change it:
+
+1. Parses the hash as a URL path plus query string.
+2. Iterates through `viewsConfig` to find the first matching regexp (`routeConfigForPath`).
+3. Extracts URL parameters by applying the regexp capture groups (`urlParamsForPath`).
+4. Updates the view stack — views at a lower layer index are preserved; views above the matched layer are cleared.
+5. Passes `urlParams` and `queryParams` as props to the route component.
+
+If no route matches, `onPathNotMatch` is called and the returned component (the `NotFound` page) is appended above the existing stack.
+
+```javascript
+// Router.js — simplified update logic
+setViews((views) =>
+    views.map((view, index) => {
+        if (index < routeViewIndex) return view;          // keep lower layers
+        if (index === routeViewIndex) return newView;     // replace matched layer
+        return null;                                      // clear upper layers
+    })
+);
+```
+
+## Route focus
+
+Each view is wrapped in a `RouteFocusedProvider` whose `value` is `true` only for the topmost (last) view. Components use the `useRouteFocused()` hook to check whether they are currently in focus.
+
+`useModelState` subscribes to core state updates only when `routeFocused` is `true`. This prevents background views from consuming resources while a modal or higher-level route is active.
+
+## viewsConfig layers
+
+Routes are grouped into five ordered layers in `src/App/routerViewsConfig.js`. A layer corresponds to a visual depth in the UI: navigating to a route in layer 2 preserves the layer 1 view behind it.
+
+<AccordionGroup>
+  <Accordion title="Layer 0 — Board (background)">
+    The persistent background view. Always rendered unless another full-screen route replaces it.
+
+    | Route | Component |
+    |---|---|
+    | Board | `routes.Board` |
+  </Accordion>
+
+  <Accordion title="Layer 1 — Main navigation routes">
+    Primary application views that sit above the Board.
+
+    | Route | Component |
+    |---|---|
+    | Intro | `routes.Intro` |
+    | Discover | `routes.Discover` |
+    | Library | `routes.Library` |
+    | Calendar | `routes.Calendar` |
+    | Continue Watching | `routes.Library` |
+    | Search | `routes.Search` |
+  </Accordion>
+
+  <Accordion title="Layer 2 — Meta details">
+    Overlays the navigation layer. Rendered on top of the current layer 1 view.
+
+    | Route | Component |
+    |---|---|
+    | Meta details | `routes.MetaDetails` |
+  </Accordion>
+
+  <Accordion title="Layer 3 — Overlay utilities">
+    Full-screen utility views.
+
+    | Route | Component |
+    |---|---|
+    | Addons | `routes.Addons` |
+    | Settings | `routes.Settings` |
+  </Accordion>
+
+  <Accordion title="Layer 4 — Player (topmost)">
+    The player renders above everything else.
+
+    | Route | Component |
+    |---|---|
+    | Player | `routes.Player` |
+  </Accordion>
+</AccordionGroup>
+
+## URL patterns
+
+All routes are defined as regular expressions in `src/common/routesRegexp.js`. The router matches hashes of the form `#<path>`.
+
+<Tabs>
+  <Tab title="Board">
+    ```
+    Pattern: /^\/?(board)?$/
+    URL params: none
+    Examples:
+      #/
+      #/board
+    ```
+  </Tab>
+  <Tab title="Intro">
+    ```
+    Pattern: /^\/intro$/
+    URL params: none
+    Example:
+      #/intro
+    ```
+  </Tab>
+  <Tab title="Discover">
+    ```
+    Pattern: /^\/discover(?:\/([^/]*)\/([^/]*)\/([^/]*))?$/
+    URL params: transportUrl, type, catalogId
+    Examples:
+      #/discover
+      #/discover/https%3A%2F%2F.../movie/top
+    ```
+  </Tab>
+  <Tab title="Library">
+    ```
+    Pattern: /^\/library(?:\/([^/]*))?$/
+    URL params: type
+    Examples:
+      #/library
+      #/library/movie
+    ```
+  </Tab>
+  <Tab title="Calendar">
+    ```
+    Pattern: /^\/calendar(?:\/([^/]*)\/([^/]*))?$/
+    URL params: year, month
+    Examples:
+      #/calendar
+      #/calendar/2024/3
+    ```
+  </Tab>
+  <Tab title="Continue watching">
+    ```
+    Pattern: /^\/continuewatching(?:\/([^/]*))?$/
+    URL params: type
+    Example:
+      #/continuewatching/series
+    ```
+  </Tab>
+  <Tab title="Search">
+    ```
+    Pattern: /^\/search$/
+    URL params: none
+    Example:
+      #/search
+    ```
+  </Tab>
+  <Tab title="Meta details">
+    ```
+    Pattern: /^\/(?:metadetails|detail)\/([^/]*)\/([^/]*)(?:\/([^/]*))?$/
+    URL params: type, id, videoId
+    Examples:
+      #/metadetails/movie/tt0111161
+      #/metadetails/series/tt0903747/s1e1
+    ```
+  </Tab>
+  <Tab title="Addons">
+    ```
+    Pattern: /^\/addons(?:\/([^/]*)(?:\/([^/]*)\/([^/]*))?)?$/
+    URL params: type, transportUrl, catalogId
+    Examples:
+      #/addons
+      #/addons/movie
+      #/addons/movie/https%3A%2F%2F.../top
+    ```
+  </Tab>
+  <Tab title="Settings">
+    ```
+    Pattern: /^\/settings$/
+    URL params: none
+    Example:
+      #/settings
+    ```
+  </Tab>
+  <Tab title="Player">
+    ```
+    Pattern: /^\/player\/([^/]*)(?:\/([^/]*)\/([^/]*)\/([^/]*)\/([^/]*)\/([^/]*))?$/
+    URL params: stream, streamTransportUrl, metaTransportUrl, type, id, videoId
+    Example:
+      #/player/<encodedStream>/https%3A%2F%2F.../https%3A%2F%2F.../movie/tt0111161/
+    ```
+  </Tab>
+</Tabs>
+
+## URL parameter extraction
+
+`urlParamsForPath` (`src/router/Router/urlParamsForPath.js`) maps regexp capture groups to named parameters:
+
+```javascript
+const urlParamsForPath = (routeConfig, path) => {
+    const matches = path.match(routeConfig.regexp);
+    return routeConfig.urlParamsNames.reduce((urlParams, name, index) => {
+        if (Array.isArray(matches) && typeof matches[index + 1] === 'string') {
+            urlParams[name] = decodeURIComponent(matches[index + 1]);
+        } else {
+            urlParams[name] = null;
+        }
+        return urlParams;
+    }, { path });
+};
+```
+
+Every `urlParams` object always includes `path` (the raw pathname). Missing capture groups are `null`.
+
+## Modal routes
+
+Modals are not separate routes — they are rendered inside the active route using the `Modal` component (`src/router/Modal/Modal.js`). The `Modal` component portals its children into a container provided by `ModalsContainerContext`, which is set up per route by the `Route` component.
+
+```javascript
+// Modal.js — portals into the route's modal container with focus lock
+const Modal = React.forwardRef(({ className, autoFocus, disabled, children }, ref) => {
+    const modalsContainer = useModalsContainer();
+    return ReactDOM.createPortal(
+        <FocusLock autoFocus={!!autoFocus} disabled={!!disabled}>
+            {children}
+        </FocusLock>,
+        modalsContainer
+    );
+});
+```
+
+Key properties:
+- `autoFocus` — moves keyboard focus into the modal when it opens.
+- `disabled` — disables focus lock (for non-blocking overlays).
+- Focus is scoped to the modal via `react-focus-lock`.
+
+## Route component
+
+Each view in the stack is wrapped by the `Route` component (`src/router/Route/Route.js`):
+
+```javascript
+const Route = ({ children }) => (
+    <div className="route-container">
+        <ModalsContainerProvider>
+            <div className="route-content">{children}</div>
+        </ModalsContainerProvider>
+    </div>
+);
+```
+
+`ModalsContainerProvider` creates the DOM node that `Modal` portals render into, scoped to this route instance.
+
+## Programmatic navigation
+
+Navigate by writing to `window.location`:
+
+```javascript
+// Go to a route
+window.location = '#/discover';
+
+// Navigate with URL params
+window.location = `#/metadetails/${type}/${id}`;
+
+// Go back / forward
+window.history.back();
+window.history.forward();
+```
+
+Keyboard shortcuts in `KeyboardShortcuts.js` use this same mechanism:
+
+| Key | Destination |
+|---|---|
+| `0` | `#/search` |
+| `1` | `#/` |
+| `2` | `#/discover` |
+| `3` | `#/library` |
+| `4` | `#/calendar` |
+| `5` | `#/addons` |
+| `6` | `#/settings` |
+| `Backspace` | `history.back()` |
+
+<Note>
+All navigation is hash-based. The path before the `#` never changes, which means the app can be served from any path without server-side routing configuration.
+</Note>

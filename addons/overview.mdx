@@ -1,0 +1,75 @@
+---
+title: Addons overview
+description: Addons extend Stremio with content catalogs, stream sources, and subtitle providers. Learn what addons are and how they work.
+---
+
+Addons are extensions that connect Stremio to external content sources. Every piece of content you see in Stremio — movies, series, streams, subtitles — comes from an addon. Without addons, Stremio is an empty player. With them, it becomes a unified interface for every content source you care about.
+
+## What addons do
+
+Each addon publishes a manifest that declares what resources it provides. When Stremio installs an addon, it reads the manifest and wires the addon into the appropriate parts of the interface.
+
+<CardGroup cols={3}>
+  <Card title="Catalog" icon="list">
+    Exposes browsable content catalogs that appear in Discover and on the Board. Examples include movie libraries, curated collections, and live TV channel lists.
+  </Card>
+  <Card title="Stream" icon="play">
+    Resolves playable stream URLs for a given title. Multiple stream addons can provide results for the same title simultaneously.
+  </Card>
+  <Card title="Subtitles" icon="subtitles">
+    Supplies subtitle files for titles during playback. Stremio aggregates subtitles from all installed subtitle addons.
+  </Card>
+</CardGroup>
+
+A single addon can provide any combination of these resource types. An addon that provides both a catalog and streams is common.
+
+## Addon manifest
+
+Every addon is identified by its **transport URL** — a URL pointing to a `manifest.json` file. The manifest describes:
+
+- **Name, version, and description** — displayed in the addons UI
+- **Logo** — shown as the addon's icon
+- **Types** — the content types the addon supports (e.g. `movie`, `series`, `channel`)
+- **Resources** — which resource types the addon handles (`catalog`, `stream`, `subtitles`, `meta`)
+- **Behavior hints** — whether the addon is configurable, requires configuration before installation, supports P2P sources, or contains adult content
+
+<Info>
+  The transport URL for an addon follows the pattern `https://example.com/manifest.json`. Stremio fetches this URL to load or refresh the addon's capabilities.
+</Info>
+
+## Official vs. community addons
+
+Addons are either **official** or **community** addons.
+
+| | Official | Community |
+|---|---|---|
+| **Publisher** | Stremio team | Third-party developers |
+| **Quality assurance** | Maintained and tested by Stremio | No guarantees |
+| **Disclaimer** | None shown | Disclaimer shown in addon details |
+| **Discovery** | Available in the built-in addon catalog | Via direct URL or community lists |
+
+<Warning>
+  Community addons are not reviewed or endorsed by Stremio. Only install addons from sources you trust.
+</Warning>
+
+## Configurable addons
+
+Some addons require configuration before they can be used — for example, entering an API key or selecting a region. These addons set `configurationRequired: true` in their manifest. Clicking **Install** on such an addon opens an external configuration page instead of installing it directly.
+
+Other addons are optionally configurable: they work out of the box but expose a settings page for customization. These have `configurable: true` in their manifest and show a **Configure** button alongside the install/uninstall button.
+
+## URL structure
+
+The Addons page is a deep-linkable route. The URL encodes which catalog you are viewing:
+
+```text
+/addons/:transportUrl?/:type?/:catalogId?
+```
+
+| Segment | Description |
+|---------|-------------|
+| `transportUrl` | The transport URL of the addon catalog source (URL-encoded). Omit to view installed addons. |
+| `type` | Content type filter, e.g. `movie`, `series` |
+| `catalogId` | The catalog identifier from the addon's manifest |
+
+When no segments are provided, the page shows your installed addons. When all three are provided, the page shows the addons available in a remote addon catalog.

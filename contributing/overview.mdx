@@ -1,0 +1,93 @@
+---
+title: Contributing overview
+description: Learn how to contribute to Stremio Web — code, bug reports, translations, and addons.
+---
+
+Stremio Web is an open-source project and contributions are welcome. This guide covers the different ways you can get involved, the standards we expect, and the licensing terms that govern the project.
+
+## Ways to contribute
+
+<CardGroup cols={2}>
+  <Card title="Report bugs" icon="bug" href="https://github.com/Stremio/stremio-web/issues">
+    Open an issue on GitHub to report a bug or unexpected behavior. Include steps to reproduce, the platform, and any relevant logs.
+  </Card>
+  <Card title="Submit code" icon="code" href="https://github.com/Stremio/stremio-web/pulls">
+    Fix a bug or implement a feature. Fork the repository, make your changes, and open a pull request.
+  </Card>
+  <Card title="Improve translations" icon="language" href="https://github.com/Stremio/stremio-translations">
+    Stremio translations are managed in a separate repository. Contribute missing or improved translations there.
+  </Card>
+  <Card title="Build addons" icon="puzzle" href="https://github.com/Stremio/stremio-addon-sdk">
+    Addons extend Stremio with new content sources. The addon SDK is the starting point for building your own.
+  </Card>
+</CardGroup>
+
+## Opening issues
+
+Before opening a new issue, search existing issues to avoid duplicates.
+
+When reporting a bug, include:
+
+- A clear description of the problem
+- Steps to reproduce
+- Expected vs. actual behavior
+- Platform and browser (or Stremio app version)
+- Any relevant console errors or screenshots
+
+<Note>
+  Do not spam issues asking for ETAs on open issues. This is explicitly against the project's code of conduct.
+</Note>
+
+## Pull request guidelines
+
+When submitting a pull request:
+
+1. Fork the repository and create a branch from `master`.
+2. Make sure your changes address an existing issue, or discuss the change beforehand.
+3. Follow the existing code style — run `pnpm run lint` before submitting.
+4. Write clear commit messages.
+5. Open the PR against the `master` branch and fill in the description.
+
+<Tip>
+  Small, focused pull requests are easier to review and merge than large ones that touch many parts of the codebase.
+</Tip>
+
+## Technologies used
+
+Familiarize yourself with the stack before contributing:
+
+- **React 18** — UI components and hooks
+- **TypeScript / JavaScript** — mixed codebase; new code should prefer TypeScript
+- **Less** — CSS preprocessor for all styles
+- **Webpack 5** — build system with Babel and ts-loader
+- **stremio-core-web** — WebAssembly core that provides all business logic and state via a message-passing transport
+- **i18next / react-i18next** — internationalization
+- **Jest** — unit testing
+- **ESLint** — linting with `typescript-eslint` and `@stylistic/eslint-plugin`
+
+## Code of conduct
+
+All contributors are expected to follow the [Code of Conduct](https://github.com/Stremio/stremio-web/blob/master/CODE_OF_CONDUCT.md). The key points are:
+
+**Expected behavior:**
+- Use welcoming language.
+- Be respectful of differing viewpoints.
+- Accept constructive criticism.
+
+**Unacceptable behavior:**
+- Harassment, trolling, or personal attacks.
+- Publishing others' private information.
+- Submitting PRs that are entirely AI-generated without understanding the code.
+- Spamming issues about missing ETAs.
+
+<Info>
+  Contributors may use AI tools as a coding aid, but you must understand and verify all code you submit. PRs that are majority AI-generated content, or that include excessive AI-generated comments and docs, will not be accepted.
+</Info>
+
+Violations may result in contributions being removed or the contributor being banned from the repository.
+
+## License
+
+Stremio Web is copyright 2017-2023 Smart Code and is available under the **GNU General Public License v2.0 (GPLv2)**. By contributing, you agree that your contributions will be licensed under the same terms.
+
+See the [`LICENSE.md`](https://github.com/Stremio/stremio-web/blob/master/LICENSE.md) file in the repository for the full license text.

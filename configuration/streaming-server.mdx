@@ -1,0 +1,117 @@
+---
+title: Streaming server
+description: Configure the Stremio streaming server URL, connection status, cache size, torrent profiles, and remote HTTPS access.
+---
+
+The streaming server is a local service that handles stream proxying, torrent playback, transcoding, and subtitle fetching. Stremio Web connects to it over HTTP.
+
+## Default URL
+
+The streaming server runs on your machine at:
+
+```
+http://127.0.0.1:11470/
+```
+
+This is the default address used by the Stremio desktop app. The web app connects to this address automatically when you open it in a browser alongside the desktop app.
+
+## Managing server URLs
+
+The **Streaming** section in Settings shows a list of all configured server URLs. Each entry displays the URL and its current connection status.
+
+<Steps>
+  <Step title="Open Settings">
+    Click the gear icon in the main navigation bar to open **Settings**, then scroll to the **Streaming** section.
+  </Step>
+  <Step title="Add a server URL">
+    Click **Add URL** below the URL list. Enter the full address of your streaming server including the port (for example, `http://127.0.0.1:11470/`), then confirm.
+  </Step>
+  <Step title="Check connection status">
+    The status column shows whether each configured URL is reachable. A connected server allows full streaming functionality.
+  </Step>
+  <Step title="Reload the server">
+    Use the **Reload** button to force Stremio to reconnect to the configured server addresses.
+  </Step>
+</Steps>
+
+## Connection status
+
+Each URL in the list shows a live status indicator:
+
+| Status | Meaning |
+|--------|--------|
+| Connected | The server is reachable and responding normally. |
+| Connecting | Stremio is attempting to establish a connection. |
+| Error | The server could not be reached at this address. |
+
+<Tip>
+  If the server shows an error, verify that the Stremio desktop app is running and that no firewall is blocking port 11470.
+</Tip>
+
+## Using a remote streaming server
+
+You can connect Stremio Web to a streaming server running on a different machine, for example a home server or a cloud VPS.
+
+<Steps>
+  <Step title="Get the remote server address">
+    Note the IP address or hostname of the machine running the streaming server and confirm the server is accessible from your network.
+  </Step>
+  <Step title="Add the remote URL">
+    In **Settings → Streaming**, click **Add URL** and enter the remote address, such as `http://192.168.1.100:11470/`.
+  </Step>
+  <Step title="Enable HTTPS endpoint (optional)">
+    If you have a logged-in Stremio account, you can use the **HTTPS endpoint** option to select a network interface for secure remote access. This exposes the server over HTTPS via Stremio's relay infrastructure.
+  </Step>
+</Steps>
+
+<Info>
+  The **HTTPS endpoint** setting is only available when you are signed in to a Stremio account and the streaming server is connected.
+</Info>
+
+## Remote URL
+
+When the streaming server is connected and a remote HTTPS endpoint is active, a **Remote URL** field appears showing the public HTTPS address. Click the copy icon next to the URL to copy it to your clipboard.
+
+This URL can be shared with other Stremio clients to use your streaming server remotely.
+
+## Cache size
+
+Controls how much disk space the streaming server uses to cache torrent data. Configure this in **Settings → Streaming → Cache size**.
+
+| Option | Size |
+|--------|------|
+| No caching | 0 — data is not stored to disk |
+| 2 GiB | ~2 GiB |
+| 5 GiB | ~5 GiB |
+| 10 GiB | ~10 GiB |
+| Infinite | No limit — uses available disk space |
+
+<Note>
+  This option is only shown when the streaming server is connected and ready.
+</Note>
+
+## Torrent profile
+
+The torrent profile controls the BitTorrent engine's connection and speed parameters. Choose a profile based on your network conditions.
+
+| Profile | Max connections | Description |
+|---------|-----------------|-------------|
+| Default | 55 | Balanced settings suitable for most connections. |
+| Soft | 35 | Lower limits for slower or congested networks. |
+| Fast | 200 | Higher limits for fast connections. |
+| Ultra fast | 400 | Maximum limits for high-bandwidth connections. |
+
+If you manually edit the individual BitTorrent parameters, the profile selector displays **custom**.
+
+## Transcoding profile
+
+The transcoding profile selects the hardware acceleration backend used when the server transcodes video. The available options depend on the hardware detected on the server machine.
+
+| Option | Description |
+|--------|-------------|
+| Disabled | Transcoding is turned off. Streams are served as-is. |
+| (hardware name) | Use the named hardware accelerator for transcoding (for example, NVENC, VideoToolbox). |
+
+<Note>
+  The transcoding profile option is only shown when the streaming server reports available hardware acceleration backends.
+</Note>

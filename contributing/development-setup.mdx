@@ -1,0 +1,164 @@
+---
+title: Development setup
+description: Set up a local development environment for Stremio Web.
+---
+
+This page walks you through forking the repository, installing dependencies, and running the development server.
+
+## Prerequisites
+
+Before you start, make sure you have the following installed:
+
+| Tool | Version | Notes |
+|------|---------|-------|
+| Node.js | 20 | See `.nvmrc`. Use [nvm](https://github.com/nvm-sh/nvm) to switch versions automatically. |
+| pnpm | 10 or higher | The project uses pnpm as its package manager. |
+| Git | Any recent version | Required to clone the repo and compute the commit hash used in the build output. |
+
+<Tip>
+  Run `node -v` and `pnpm -v` to verify your versions before proceeding.
+</Tip>
+
+## Setup
+
+<Steps>
+  <Step title="Fork and clone the repository">
+    Fork [stremio/stremio-web](https://github.com/Stremio/stremio-web) on GitHub, then clone your fork:
+
+    ```bash
+    git clone https://github.com/<your-username>/stremio-web.git
+    cd stremio-web
+    ```
+  </Step>
+
+  <Step title="Use the correct Node.js version">
+    The repository includes an `.nvmrc` file pinned to Node.js 20. If you use nvm:
+
+    ```bash
+    nvm use
+    ```
+  </Step>
+
+  <Step title="Install dependencies">
+    ```bash
+    pnpm install
+    ```
+
+    This installs all runtime and development dependencies declared in `package.json`.
+  </Step>
+
+  <Step title="Start the development server">
+    ```bash
+    pnpm start
+    ```
+
+    This runs `webpack serve --mode development`. The dev server starts on `https://0.0.0.0` with HTTPS enabled. Open the printed local address in your browser.
+
+    <Note>
+      The dev server uses a self-signed certificate. You may need to accept a browser warning on first visit.
+    </Note>
+  </Step>
+</Steps>
+
+## Available scripts
+
+All scripts are defined in `package.json` and run with `pnpm run <script>`.
+
+<AccordionGroup>
+  <Accordion title="pnpm start — development server">
+    Starts the Webpack dev server in development mode with source maps and live rebuilds.
+
+    ```bash
+    pnpm start
+    ```
+  </Accordion>
+
+  <Accordion title="pnpm run start-prod — production dev server">
+    Starts the Webpack dev server in production mode. Useful for testing the optimized build locally.
+
+    ```bash
+    pnpm run start-prod
+    ```
+  </Accordion>
+
+  <Accordion title="pnpm run build — production build">
+    Compiles and bundles the application to the `build/` directory. Output filenames include the current Git commit hash.
+
+    ```bash
+    pnpm run build
+    ```
+  </Accordion>
+
+  <Accordion title="pnpm test — run unit tests">
+    Runs the Jest test suite.
+
+    ```bash
+    pnpm test
+    ```
+  </Accordion>
+
+  <Accordion title="pnpm run lint — run ESLint">
+    Lints all files under `src/` using the ESLint configuration in `eslint.config.mjs`.
+
+    ```bash
+    pnpm run lint
+    ```
+
+    The linter enforces:
+    - `typescript-eslint` recommended and stylistic rules
+    - React plugin rules
+    - `@stylistic/eslint-plugin` formatting rules (4-space indent, single quotes, semicolons)
+    - No `console.log` (only `console.warn` and `console.error` are allowed)
+    - Strict equality (`===`)
+  </Accordion>
+
+  <Accordion title="pnpm run scan-translations — translation key scan">
+    Scans the source tree for translation keys and reports any that are missing from the translation files. Runs the test at `tests/i18nScan.test.js` via Jest.
+
+    ```bash
+    pnpm run scan-translations
+    ```
+  </Accordion>
+</AccordionGroup>
+
+## TypeScript compilation
+
+The project uses a mixed JavaScript/TypeScript codebase. TypeScript is configured in `tsconfig.json`:
+
+```json
+{
+  "compilerOptions": {
+    "lib": ["ESNext", "DOM", "DOM.Iterable"],
+    "jsx": "react",
+    "baseUrl": "./src",
+    "outDir": "./dist",
+    "moduleResolution": "node",
+    "paths": {
+      "stremio/*": ["*"]
+    },
+    "resolveJsonModule": true,
+    "esModuleInterop": true,
+    "allowJs": true,
+    "checkJs": false,
+    "strict": true
+  },
+  "include": ["src/"]
+}
+```
+
+Key points:
+- `strict: true` is enabled — all new TypeScript code must be strictly typed.
+- `allowJs: true` allows importing existing JavaScript files from TypeScript.
+- The `stremio/*` path alias maps to `src/*`, so you can import with `import Foo from 'stremio/components/Foo'`.
+- TypeScript is compiled by `ts-loader` during the Webpack build, not by `tsc` directly.
+
+## Running with Docker
+
+You can also run a production build inside Docker:
+
+```bash
+docker build -t stremio-web .
+docker run -p 8080:8080 stremio-web
+```
+
+This is useful for a clean environment test before submitting a pull request.

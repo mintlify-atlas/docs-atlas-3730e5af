@@ -1,0 +1,98 @@
+---
+title: 'Channels'
+description: 'Content type specification for channels in Stremio Web, including priority and how channel content differs from movies and series.'
+---
+
+The `channel` type represents curated video channels — typically YouTube-style content providers or similar episodic channel formats that don't fit the traditional TV series structure.
+
+## Type identifier
+
+```javascript
+'channel'
+```
+
+## Priority
+
+`channel` has a priority value of **8** — third after `movie` (10) and `series` (9):
+
+```javascript
+// From CONSTANTS.js
+const TYPE_PRIORITIES = {
+    movie: 10,
+    series: 9,
+    channel: 8,
+    // ...
+};
+```
+
+## Icon
+
+The icon key for channels is `'channels'`:
+
+```javascript
+const ICON_FOR_TYPE = new Map([
+    ['channel', 'channels'],
+    // ...
+]);
+```
+
+## Metadata fields
+
+Channels share the standard top-level meta fields (`id`, `type`, `name`, `poster`, `background`, `logo`, `description`, `genres`, `links`). Like series, channels may include a `videos` array of individual items.
+
+<ResponseField name="type" type="string" required>
+  Must be `'channel'`.
+</ResponseField>
+
+<ResponseField name="videos" type="Video[]">
+  List of channel items/episodes. Each item follows the same structure as series video objects:
+
+  <ResponseField name="videos[].id" type="string" required>
+    Unique item identifier.
+  </ResponseField>
+
+  <ResponseField name="videos[].title" type="string">
+    Item title.
+  </ResponseField>
+
+  <ResponseField name="videos[].released" type="string">
+    ISO 8601 publication date.
+  </ResponseField>
+
+  <ResponseField name="videos[].thumbnail" type="string">
+    Thumbnail URL.
+  </ResponseField>
+
+  <ResponseField name="videos[].overview" type="string">
+    Item description.
+  </ResponseField>
+</ResponseField>
+
+## How channels differ from series
+
+| Aspect | `series` | `channel` |
+|---|---|---|
+| Season structure | Yes — `season` and `episode` numbers | No — flat list of videos |
+| Calendar integration | Yes — uses `videos[].released` | No |
+| Priority | 9 | 8 |
+| Icon key | `'series'` | `'channels'` |
+
+<Note>
+  Channels do not appear in the Calendar view. The Calendar is exclusive to the `series` type.
+</Note>
+
+## UI surfaces
+
+<AccordionGroup>
+  <Accordion title="Discover">
+    Channels appear in Discover when add-ons provide channel catalogs. The type selector places `channel` third, after `movie` and `series`.
+  </Accordion>
+
+  <Accordion title="Detail page">
+    The channel detail page (`#/detail/channel/{id}`) renders the list of channel videos without a season selector. Users select individual videos to fetch streams.
+  </Accordion>
+
+  <Accordion title="Library">
+    Channels can be added to the library. Library cards display the channel poster and name.
+  </Accordion>
+</AccordionGroup>

@@ -1,0 +1,65 @@
+---
+title: Board
+description: The Board is Stremio's home screen, surfacing catalog rows from your installed addons and letting you pick up where you left off.
+---
+
+The Board is the first screen you see after signing in. It aggregates content rows from every installed addon and places your in-progress titles at the top so you can resume watching without navigating anywhere else.
+
+## What you see on the Board
+
+<CardGroup cols={2}>
+  <Card title="Continue Watching" icon="play">
+    A dedicated row at the top of the Board shows every title you have started but not finished. Items are sorted by most recently watched and include notification badges for new episodes.
+  </Card>
+  <Card title="Catalog rows" icon="layout-list">
+    Below Continue Watching, the Board renders one row per catalog provided by your installed addons — movies, series, channels, and more — each scrollable horizontally.
+  </Card>
+  <Card title="Notification badges" icon="bell">
+    When a series in your library has unwatched new episodes, a badge appears on the poster so you can spot new content at a glance.
+  </Card>
+  <Card title="Streaming server warning" icon="triangle-alert">
+    If the streaming server is unreachable, a banner appears at the bottom of the Board with options to install the service, dismiss for a month, or never show again.
+  </Card>
+</CardGroup>
+
+## Continue Watching
+
+The Continue Watching row is powered by your library's watch state. It appears automatically as soon as you have at least one item with saved progress.
+
+<Steps>
+  <Step title="Start watching any title">
+    Open a movie or series episode from any catalog or the Discover page. Stremio saves your position automatically.
+  </Step>
+  <Step title="Return to the Board">
+    Navigate back to the Board. The title appears in the Continue Watching row with a progress indicator.
+  </Step>
+  <Step title="Resume playback">
+    Click the item. The player opens at the exact timestamp where you stopped.
+  </Step>
+</Steps>
+
+<Tip>
+  You can also view your full Continue Watching list on a dedicated page — look for the **Continue Watching** link in the sidebar.
+</Tip>
+
+## How catalog rows are loaded
+
+The Board loads catalog rows lazily as you scroll. Only the rows currently visible (plus a small buffer above and below) are fetched from the addon network. This keeps the initial load fast regardless of how many addons you have installed.
+
+<Note>
+  The Board reflects the catalogs exposed by your installed addons. Installing or removing an addon from the **Addons** page changes which rows appear here.
+</Note>
+
+## Notification badges
+
+Badges on Continue Watching items indicate unwatched episodes available for a series you are following. The badge count comes from the notifications model and updates whenever Stremio syncs with the addon network.
+
+## Streaming server warning
+
+Certain stream types (torrents, local files) require the Stremio streaming server to be running locally. If the server cannot be reached, a warning banner appears at the bottom of the Board with the following actions:
+
+| Action | Effect |
+|--------|--------|
+| Install service | Opens the Stremio service download page |
+| Later | Hides the banner for one month |
+| Don't show again | Permanently dismisses the banner |

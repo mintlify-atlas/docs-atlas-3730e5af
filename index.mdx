@@ -1,97 +1,101 @@
 ---
-title: "Introduction"
-description: "Welcome to the new home for your documentation"
+title: "Stremio Web — Freedom to Stream"
+description: "Stremio is a modern media center that's a one-stop solution for your video entertainment. Discover, watch, and organize content from movies, series, channels, and more."
 ---
 
-## Setting up
-
-Get your documentation site up and running in minutes.
-
-<Card
-  title="Start here"
-  icon="rocket"
-  href="/quickstart"
-  horizontal
->
-  Follow our three step quickstart guide.
-</Card>
-
-## Make it yours
-
-Design a docs site that looks great and empowers your users.
-
-<Columns cols={2}>
-  <Card
-    title="Edit locally"
-    icon="pen-to-square"
-    href="/development"
-  >
-    Edit your docs locally and preview them in real time.
+<CardGroup cols={2}>
+  <Card title="Quick Start" icon="rocket" href="/getting-started/quickstart">
+    Get Stremio Web running locally in minutes
   </Card>
-  <Card
-    title="Customize your site"
-    icon="palette"
-    href="/essentials/settings"
-  >
-    Customize the design and colors of your site to match your brand.
+  <Card title="Core Features" icon="play" href="/features/board">
+    Explore the Board, Discover, Library, Player, and more
   </Card>
-    <Card
-    title="Set up navigation"
-    icon="map"
-    href="/essentials/navigation"
-  >
-    Organize your docs to help users find what they need and succeed with your product.
+  <Card title="Addons" icon="puzzle-piece" href="/addons/overview">
+    Extend Stremio with content addons from the community
   </Card>
-  <Card
-    title="API documentation"
-    icon="terminal"
-    href="/api-reference/introduction"
-  >
-    Auto-generate API documentation from OpenAPI specifications.
+  <Card title="Self-Hosting" icon="server" href="/deployment/docker">
+    Deploy Stremio Web on your own infrastructure with Docker
   </Card>
-</Columns>
+</CardGroup>
 
-## Create beautiful pages
+## What is Stremio Web?
 
-Everything you need to create world-class documentation.
+Stremio Web is an open-source, React-based media center that runs in the browser. It connects to a local or remote **Stremio Core** service and provides a rich interface for discovering and watching video content across many content types and sources.
 
-<Columns cols={2}>
-  <Card
-    title="Write with MDX"
-    icon="pen-fancy"
-    href="/essentials/markdown"
-  >
-    Use MDX to style your docs pages.
-  </Card>
-  <Card
-    title="Code samples"
-    icon="code"
-    href="/essentials/code"
-  >
-    Add sample code to demonstrate how to use your product.
-  </Card>
-  <Card
-    title="Images"
-    icon="image"
-    href="/essentials/images"
-  >
-    Display images and other media.
-  </Card>
-  <Card
-    title="Reusable snippets"
-    icon="recycle"
-    href="/essentials/reusable-snippets"
-  >
-    Write once and reuse across your docs.
-  </Card>
-</Columns>
+<Info>
+  Stremio Web is the browser-based frontend for the Stremio ecosystem. It requires a Stremio Core service (either the desktop app or a self-hosted streaming server) to stream content.
+</Info>
 
-## Need inspiration?
+## Key features
 
-<Card
-  title="See complete examples"
-  icon="stars"
-  href="https://mintlify.com/customers"
->
-  Browse our showcase of exceptional documentation sites.
-</Card>
+<CardGroup cols={3}>
+  <Card title="Board" icon="house" href="/features/board">
+    Personalized home screen with recommendations and continue-watching rows
+  </Card>
+  <Card title="Discover" icon="compass" href="/features/discover">
+    Browse catalogs from installed addons by genre, type, and more
+  </Card>
+  <Card title="Library" icon="bookmark" href="/features/library">
+    Manage your watched and saved content across all sources
+  </Card>
+  <Card title="Player" icon="circle-play" href="/features/player">
+    Built-in video player with subtitle support and external player options
+  </Card>
+  <Card title="Addons" icon="puzzle-piece" href="/addons/overview">
+    Install community addons to unlock new content sources
+  </Card>
+  <Card title="Chromecast" icon="cast" href="/configuration/settings">
+    Cast any stream to your TV with Google Chromecast
+  </Card>
+  <Card title="Calendar" icon="calendar" href="/features/calendar">
+    Track upcoming episodes and new releases
+  </Card>
+  <Card title="Search" icon="magnifying-glass" href="/features/search">
+    Search across all installed addons simultaneously
+  </Card>
+  <Card title="PWA Support" icon="mobile" href="/deployment/self-hosting">
+    Install as a Progressive Web App on any device
+  </Card>
+</CardGroup>
+
+## Supported content types
+
+Stremio organizes content across multiple categories, each represented throughout the Discover, Library, and Board interfaces:
+
+| Type | Description |
+|------|-------------|
+| `movie` | Feature films and short films |
+| `series` | TV shows and web series with season/episode navigation |
+| `channel` | Live or on-demand channel content |
+| `tv` | Live TV streams |
+| `music` | Music videos and audio content |
+| `radio` | Internet radio streams |
+| `podcast` | Podcast episodes |
+| `game` | Gaming-related content |
+| `book` | E-books and audiobooks |
+
+## Architecture overview
+
+Stremio Web is built with **React 18**, **Less** for styling, and **TypeScript** for type safety. It communicates with Stremio Core via a WebSocket transport layer, and uses an addon system based on the Stremio Protocol.
+
+```
+Browser (Stremio Web)
+    │
+    ▼ WebSocket / HTTP
+Stremio Core (local or remote)
+    │
+    ▼ Stremio Protocol
+Addons (community-built)
+    │
+    ▼
+Content Sources (IMDB, YouTube, torrents, etc.)
+```
+
+<CardGroup cols={2}>
+  <Card title="Development setup" icon="code" href="/contributing/development-setup">
+    Set up the local development environment
+  </Card>
+  <Card title="Architecture deep dive" icon="diagram-project" href="/reference/architecture">
+    Learn how the codebase is organized
+  </Card>
+</CardGroup>

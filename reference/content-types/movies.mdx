@@ -1,0 +1,126 @@
+---
+title: 'Movies'
+description: 'Content type specification for movies in Stremio Web, including priority, metadata fields, and how movies appear across the UI.'
+---
+
+The `movie` type represents a standalone film. It has the highest priority of all content types in Stremio Web and is the default type shown in Discover and Board.
+
+## Type identifier
+
+```javascript
+'movie'
+```
+
+## Priority
+
+`movie` has a priority value of **10** — the highest of all recognized content types. Priority is used to sort type selectors and catalog tabs when multiple types are available from an add-on.
+
+```javascript
+// From CONSTANTS.js
+const TYPE_PRIORITIES = {
+    movie: 10,
+    // ...
+};
+```
+
+## Icon
+
+The icon key for movies is `'movies'`, as defined in `ICON_FOR_TYPE`:
+
+```javascript
+const ICON_FOR_TYPE = new Map([
+    ['movie', 'movies'],
+    // ...
+]);
+```
+
+## Metadata fields
+
+The following fields are expected for movie catalog items and detail pages. Fields sourced from the [Stremio Add-on SDK](https://github.com/Stremio/stremio-addon-sdk) meta object spec:
+
+<ResponseField name="id" type="string" required>
+  Unique identifier for the movie. For IMDB-sourced content, this is the IMDB ID (e.g., `'tt0111161'`).
+</ResponseField>
+
+<ResponseField name="type" type="string" required>
+  Must be `'movie'`.
+</ResponseField>
+
+<ResponseField name="name" type="string" required>
+  The movie title displayed in catalog cards and the detail page header.
+</ResponseField>
+
+<ResponseField name="poster" type="string">
+  URL to the poster image. Used in catalog cards and the detail page.
+</ResponseField>
+
+<ResponseField name="background" type="string">
+  URL to a background/backdrop image shown on the detail page.
+</ResponseField>
+
+<ResponseField name="logo" type="string">
+  URL to a logo image overlaid on the backdrop on the detail page.
+</ResponseField>
+
+<ResponseField name="description" type="string">
+  Plot summary displayed on the detail page.
+</ResponseField>
+
+<ResponseField name="releaseInfo" type="string">
+  Release year or date string (e.g., `'2023'`).
+</ResponseField>
+
+<ResponseField name="runtime" type="string">
+  Duration string (e.g., `'142 min'`).
+</ResponseField>
+
+<ResponseField name="genres" type="string[]">
+  Genre list displayed as tags on the detail page.
+</ResponseField>
+
+<ResponseField name="director" type="string[]">
+  Director name(s).
+</ResponseField>
+
+<ResponseField name="cast" type="string[]">
+  Cast member names.
+</ResponseField>
+
+<ResponseField name="imdbRating" type="string">
+  IMDB rating string (e.g., `'8.5'`), shown as a badge.
+</ResponseField>
+
+<ResponseField name="links" type="Link[]">
+  Structured links. The following categories are used by the UI:
+
+  | `type` value | Constant | Usage |
+  |---|---|---|
+  | `'meta'` | `META_LINK_CATEGORY` | Internal meta links |
+  | `'imdb'` | `IMDB_LINK_CATEGORY` | IMDB page link |
+  | `'share'` | `SHARE_LINK_CATEGORY` | Share URL |
+  | `'Writers'` | `WRITERS_LINK_CATEGORY` | Writer credits |
+</ResponseField>
+
+## UI surfaces
+
+<AccordionGroup>
+  <Accordion title="Board">
+    Movies appear in the Board (home) view when add-ons provide movie catalogs. Catalog previews show up to **10 items** (`CATALOG_PREVIEW_SIZE`) per catalog row.
+  </Accordion>
+
+  <Accordion title="Discover">
+    The Discover page defaults to the `movie` type given its priority of 10. Users can browse paginated catalogs with up to **100 items per page** (`CATALOG_PAGE_SIZE`). The type selector orders types by `TYPE_PRIORITIES` descending, so `movie` appears first.
+  </Accordion>
+
+  <Accordion title="Library">
+    Movies added to the library are stored with their full meta object. The Library view filters by type when a type is selected from the sidebar.
+  </Accordion>
+
+  <Accordion title="Detail page">
+    The movie detail page (`#/detail/movie/{id}`) displays poster, background, logo, description, runtime, genres, cast, director, rating, and available streams from installed add-ons.
+  </Accordion>
+</AccordionGroup>
+
+<Note>
+  Movies do not have seasons or episodes. The detail page for a `movie` renders stream options directly without an episode selector.
+</Note>

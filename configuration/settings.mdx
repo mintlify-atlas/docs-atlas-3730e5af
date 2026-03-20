@@ -1,0 +1,75 @@
+---
+title: Settings
+description: Overview of all Stremio settings sections — General, Interface, Player, Streaming, Shortcuts, and Info.
+---
+
+The **Settings** page is accessible from the main navigation bar. It is divided into six sections that you can scroll through or jump to by clicking an item in the left-side menu.
+
+<Note>
+  The **Shortcuts** section is hidden on mobile devices. All other sections are available on every platform.
+</Note>
+
+## Navigating settings
+
+The left-side menu highlights the currently visible section as you scroll. Click any section name to jump directly to it.
+
+## Settings sections
+
+<CardGroup cols={2}>
+  <Card title="General" icon="user" href="/configuration/settings#general">
+    Account info, data export, calendar subscription, Trakt authentication, and links to support and legal documents.
+  </Card>
+  <Card title="Interface" icon="layout-dashboard" href="/configuration/settings#interface">
+    UI language, quit-on-close behavior, Escape key fullscreen exit, and spoiler blurring for unwatched content.
+  </Card>
+  <Card title="Player" icon="play" href="/configuration/player-settings">
+    Subtitle appearance, audio preferences, seek duration, auto-play behavior, external player selection, and advanced playback options.
+  </Card>
+  <Card title="Streaming server" icon="server" href="/configuration/streaming-server">
+    Streaming server URL management, remote HTTPS endpoint, cache size, torrent profile, and transcoding profile.
+  </Card>
+  <Card title="Shortcuts" icon="keyboard" href="/configuration/keyboard-shortcuts">
+    Reference table of all keyboard shortcuts for navigation and player control. Desktop only.
+  </Card>
+  <Card title="Info" icon="info" href="/configuration/settings#info">
+    Read-only version display: app version, build hash, streaming server version, and shell version.
+  </Card>
+</CardGroup>
+
+## General
+
+The **General** section shows your account information and provides account-related actions.
+
+| Item | Description |
+|------|-------------|
+| Data export | Downloads a copy of your Stremio data as a file. Requires a logged-in account. |
+| Calendar subscription | Opens a calendar subscription link for your watch schedule. Requires a logged-in account. |
+| Support | Opens the Stremio support portal. |
+| Source code | Opens the Stremio Web repository on GitHub at the current build's commit. |
+| Terms of service | Opens the Stremio terms of service. |
+| Privacy policy | Opens the Stremio privacy policy. |
+| Delete account | Opens the account deletion guide. Requires a logged-in account. |
+| Change password | Opens the password reset page for your account email. Requires a logged-in account with an email address. |
+| Trakt | Authenticate with Trakt to sync your watch history, or log out of an existing Trakt session. |
+
+## Interface
+
+The **Interface** section controls the look and behavior of the Stremio UI.
+
+| Setting | Description |
+|---------|-------------|
+| UI language | Sets the display language for all text in the Stremio interface. |
+| Quit on close | When enabled, closing the window exits the application entirely. Desktop only. |
+| Exit fullscreen with Escape | When enabled, pressing `Escape` exits fullscreen mode. Desktop only. |
+| Blur unwatched images | When enabled, blurs thumbnails and artwork for content you have not yet watched, reducing spoilers. |
+
+## Info
+
+The **Info** section is read-only and displays version information for your current installation.
+
+| Field | Description |
+|-------|-------------|
+| App version | The current Stremio Web version number. |
+| Build version | The Git commit hash for this build. |
+| Server version | The version of the connected streaming server. Shown only when the streaming server is connected. |
+| Shell version | The version of the native shell wrapping the web app. Shown only in the desktop app. |

@@ -1,0 +1,253 @@
+---
+title: Services
+description: The five services that power Stremio Web — how they are structured, provided to components, and managed through their lifecycle.
+---
+
+Stremio Web's runtime behaviour is managed by five services instantiated once in `App.js` and distributed to the component tree through React context.
+
+## ServicesContext pattern
+
+All services are held in a plain object passed to `ServicesProvider` (`src/services/ServicesContext/ServicesProvider.js`):
+
+```javascript
+// App.js
+const services = React.useMemo(() => ({
+    core:              new Core({ appVersion: process.env.VERSION, shellVersion: null }),
+    shell:             new Shell(),
+    chromecast:        new Chromecast(),
+    keyboardShortcuts: new KeyboardShortcuts(),
+    dragAndDrop:       new DragAndDrop({ core })
+}), []);
+
+return (
+    <ServicesProvider services={services}>
+        {children}
+    </ServicesProvider>
+);
+```
+
+Any component can access services with the `useServices` hook:
+
+```javascript
+const { core, shell, chromecast } = useServices();
+```
+
+`ServicesContext` itself is a plain `React.createContext({})`. There is no Provider abstraction beyond `ServicesProvider` — the context value is the `services` object directly.
+
+## Service lifecycle
+
+All five services follow the same lifecycle contract:
+
+```
+start() → active = true  → emits 'stateChanged'
+stop()  → active = false → emits 'stateChanged'
+```
+
+Services with an async transport (Core, Shell, Chromecast) have three states:
+
+| State | Meaning |
+|---|---|
+| `starting: true` | `start()` called, transport initialising |
+| `active: true` | Transport ready, service operational |
+| `error: Error` | Transport failed, service non-functional |
+
+`App.js` starts all services inside a `useEffect` and stops them on cleanup:
+
+```javascript
+services.core.start();
+services.shell.start();
+services.chromecast.start();
+services.keyboardShortcuts.start();
+services.dragAndDrop.start();
+
+return () => {
+    services.core.stop();
+    services.shell.stop();
+    services.chromecast.stop();
+    services.keyboardShortcuts.stop();
+    services.dragAndDrop.stop();
+};
+```
+
+`App.js` listens for `stateChanged` on Core and Shell to set the `initialized` flag that gates rendering. The app renders a blank screen until both Core and Shell have settled (active or errored).
+
+---
+
+## Core
+
+**File:** `src/services/Core/Core.js`
+
+Manages the lifecycle of the WASM core and exposes a `transport` for all communication.
+
+### Properties
+
+| Property | Type | Description |
+|---|---|---|
+| `active` | `boolean` | `true` when the transport is initialised and ready |
+| `error` | `Error \| null` | Set if transport initialisation failed |
+| `starting` | `boolean` | `true` while the transport is initialising |
+| `transport` | `CoreTransport \| null` | The active transport instance |
+
+### CoreTransport
+
+**File:** `src/services/Core/CoreTransport.js`
+
+`CoreTransport` spawns a Web Worker (`worker.js`) and wraps the `@stremio/stremio-core-web/bridge` interface.
+
+```javascript
+const worker = new Worker(`${process.env.COMMIT_HASH}/scripts/worker.js`);
+const bridge = new Bridge(window, worker);
+```
+
+**Methods:**
+
+| Method | Signature | Description |
+|---|---|---|
+| `dispatch` | `(action, field)` | Send an action to a core model. `field` scopes the action to a specific model instance. |
+| `getState` | `(field) → Promise` | Fetch the current state of a model. |
+| `getDebugState` | `() → Promise` | Fetch the full debug state of the core. |
+| `analytics` | `(event)` | Send an analytics event with the current hash path. |
+| `decodeStream` | `(stream) → Promise` | Decode a stream descriptor string. |
+
+**Events emitted on `transport`:**
+
+| Event | Payload | Description |
+|---|---|---|
+| `NewState` | `string[]` | List of model names whose state changed |
+| `CoreEvent` | `{ event, args }` | Named domain event (e.g. `SettingsUpdated`) |
+
+**Events emitted on `core`:**
+
+| Event | Description |
+|---|---|
+| `stateChanged` | Fired when `active`, `error`, or `starting` changes |
+
+### Window focus sync
+
+When the browser window regains focus and Core is active, `App.js` dispatches four sync actions:
+
+- `PullAddonsFromAPI`
+- `PullUserFromAPI`
+- `SyncLibraryWithAPI`
+- `PullNotifications`
+
+This keeps the app up to date after the user switches away and returns.
+
+---
+
+## Shell
+
+**File:** `src/services/Shell/Shell.js`
+
+Bridges the native Qt desktop shell when Stremio Web runs inside the Stremio desktop application. In browser-only deployments the transport fails to initialise and `shell.error` is set, but the app continues running.
+
+### ShellTransport
+
+**File:** `src/services/Shell/ShellTransport.js`
+
+Uses `window.qt.webChannelTransport` (a Qt WebChannel) to communicate with the host application over a JSON message protocol.
+
+- On init, sends a `QtMsgTypes.init` message and waits for the object descriptor.
+- Connects to all signals exposed by the `transport` Qt object.
+- Exposes a `send(event, args)` method that invokes the `onEvent` method on the Qt side.
+- Emits an `app-ready` signal to the shell once initialised.
+
+**Key shell events received from Qt:**
+
+| Event | Description |
+|---|---|
+| `open-media` | Open a `stremio://` deep link URL |
+| `windowClosed` | The native window close button was pressed |
+
+`App.js` handles `open-media` by parsing the `stremio://` URL and redirecting `window.location.href` to the corresponding hash route.
+
+---
+
+## Chromecast
+
+**File:** `src/services/Chromecast/Chromecast.js`
+
+Initialises the Google Cast SDK and manages a `ChromecastTransport`. Errors gracefully when the Cast API is not available (e.g. non-Chrome browsers).
+
+### Properties
+
+| Property | Type | Description |
+|---|---|---|
+| `active` | `boolean` | `true` when the Cast SDK is initialised |
+| `error` | `Error \| null` | `'Google Cast API not available'` if SDK is absent |
+| `transport` | `ChromecastTransport \| null` | Active transport for casting control |
+
+When Chromecast becomes active, `App.js` configures it:
+
+```javascript
+services.chromecast.transport.setOptions({
+    receiverApplicationId: CONSTANTS.CHROMECAST_RECEIVER_APP_ID,
+    autoJoinPolicy: chrome.cast.AutoJoinPolicy.PAGE_SCOPED,
+    resumeSavedSession: false,
+    androidReceiverCompatible: true
+});
+```
+
+---
+
+## KeyboardShortcuts
+
+**File:** `src/services/KeyboardShortcuts/KeyboardShortcuts.js`
+
+Attaches a global `keydown` listener to `window`. Shortcuts are ignored when the user is typing in an `INPUT` element or when a modifier key (`Ctrl`, `Alt`, `Shift`, `Meta`) is held.
+
+### Shortcuts
+
+| Key | Action |
+|---|---|
+| `0` | Navigate to `#/search` |
+| `1` | Navigate to `#/` (Board) |
+| `2` | Navigate to `#/discover` |
+| `3` | Navigate to `#/library` |
+| `4` | Navigate to `#/calendar` |
+| `5` | Navigate to `#/addons` |
+| `6` | Navigate to `#/settings` |
+| `Backspace` | `history.back()` |
+
+### Properties
+
+| Property | Type | Description |
+|---|---|---|
+| `active` | `boolean` | `true` when the keydown listener is attached |
+
+---
+
+## DragAndDrop
+
+**File:** `src/services/DragAndDrop/DragAndDrop.js`
+
+Handles files dropped onto the browser window. Attaches `dragover` (to prevent the default browser navigation) and `drop` listeners.
+
+Currently handles one file type:
+
+| MIME type | Action |
+|---|---|
+| `application/x-bittorrent` | Reads the file as an `ArrayBuffer` and dispatches `StreamingServer/CreateTorrent` to the core |
+| `application/x-subrip` | Accepted but not yet handled |
+| `text/vtt` | Accepted but not yet handled |
+
+Unsupported file types emit an `error` event with `{ message, file: { name, type } }`.
+
+`DragAndDrop` receives `core` as a constructor argument because it needs to dispatch actions directly:
+
+```javascript
+const dragAndDrop = new DragAndDrop({ core });
+```
+
+### Properties
+
+| Property | Type | Description |
+|---|---|---|
+| `active` | `boolean` | `true` when the event listeners are attached |
+
+### Events
+
+| Event | Payload | Description |
+|---|---|---|
+| `error` | `{ message, file }` | Emitted when a dropped file cannot be processed |
+| `stateChanged` | — | Emitted when `active` changes |

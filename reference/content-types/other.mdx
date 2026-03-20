@@ -1,0 +1,119 @@
+---
+title: 'Other content types'
+description: 'Reference for all additional Stremio Web content types: tv, music, radio, podcast, game, book, adult, and other — including priorities and icon keys.'
+---
+
+In addition to [`movie`](/reference/content-types/movies), [`series`](/reference/content-types/series), and [`channel`](/reference/content-types/channels), Stremio Web supports a range of additional content types. All type priorities and icon mappings are defined in `src/common/CONSTANTS.js`.
+
+## All types: priority and icon reference
+
+| Type | Priority | Icon key | Notes |
+|---|---|---|---|
+| `movie` | 10 | `movies` | [See Movies reference](/reference/content-types/movies) |
+| `series` | 9 | `series` | [See Series reference](/reference/content-types/series) |
+| `channel` | 8 | `channels` | [See Channels reference](/reference/content-types/channels) |
+| `tv` | 7 | `tv` | Live TV streams |
+| `music` | 6 | `ic_music` | Music content |
+| `radio` | 5 | `ic_radio` | Radio streams |
+| `podcast` | 4 | `ic_podcast` | Podcast episodes |
+| `game` | 3 | `ic_games` | Game-related content |
+| `book` | 2 | `ic_book` | Books and written media |
+| `adult` | 1 | `ic_adult` | Adult content |
+| `other` | `-Infinity` | `movies` | Catch-all for unrecognized types |
+
+```javascript
+// From src/common/CONSTANTS.js
+const TYPE_PRIORITIES = {
+    movie: 10,
+    series: 9,
+    channel: 8,
+    tv: 7,
+    music: 6,
+    radio: 5,
+    podcast: 4,
+    game: 3,
+    book: 2,
+    adult: 1,
+    other: -Infinity
+};
+
+const ICON_FOR_TYPE = new Map([
+    ['movie', 'movies'],
+    ['series', 'series'],
+    ['channel', 'channels'],
+    ['tv', 'tv'],
+    ['book', 'ic_book'],
+    ['game', 'ic_games'],
+    ['music', 'ic_music'],
+    ['adult', 'ic_adult'],
+    ['radio', 'ic_radio'],
+    ['podcast', 'ic_podcast'],
+    ['other', 'movies'],
+]);
+```
+
+## Type descriptions
+
+<AccordionGroup>
+  <Accordion title="tv (priority 7)">
+    Live or linear TV streams. Icon key: `tv`.
+
+    The `tv` type is intended for live television channels and streams. Content under this type typically provides a single stream per item (the live feed) rather than a `videos` array. It does not integrate with the Calendar view.
+  </Accordion>
+
+  <Accordion title="music (priority 6)">
+    Music content. Icon key: `ic_music`.
+
+    Used for music tracks, albums, or music video content provided by add-ons. Lower priority than TV given its niche use in the Stremio ecosystem.
+  </Accordion>
+
+  <Accordion title="radio (priority 5)">
+    Radio streams. Icon key: `ic_radio`.
+
+    Live or recorded radio content. Similar in structure to `tv` — typically a single continuous stream per item.
+  </Accordion>
+
+  <Accordion title="podcast (priority 4)">
+    Podcast episodes. Icon key: `ic_podcast`.
+
+    Episodic audio or video podcast content. May use a `videos` array to list individual episodes, similar to `series` or `channel`.
+  </Accordion>
+
+  <Accordion title="game (priority 3)">
+    Game-related content. Icon key: `ic_games`.
+
+    Used for game streams, trailers, or gameplay content provided by specialized add-ons.
+  </Accordion>
+
+  <Accordion title="book (priority 2)">
+    Books and written media. Icon key: `ic_book`.
+
+    Intended for audiobooks or e-book content provided through add-ons.
+  </Accordion>
+
+  <Accordion title="adult (priority 1)">
+    Adult content. Icon key: `ic_adult`.
+
+    Has the lowest non-fallback priority. Add-ons serving adult content use this type identifier. The type is subject to content filtering in the UI.
+  </Accordion>
+
+  <Accordion title="other (priority -Infinity)">
+    Catch-all for unrecognized types. Icon key: `movies` (falls back to the movie icon).
+
+    A priority of `-Infinity` ensures this type always sorts last in any type selector. Add-ons may use arbitrary type strings — any type not explicitly listed in `TYPE_PRIORITIES` is implicitly treated as `other` by the sorting logic.
+  </Accordion>
+</AccordionGroup>
+
+## Priority ordering logic
+
+Type selectors and catalog tabs are ordered by `TYPE_PRIORITIES` in **descending** order. Types not present in `TYPE_PRIORITIES` receive an implicit priority of `undefined`, which sorts below all numeric values.
+
+```javascript
+const sortedTypes = types.sort(
+    (a, b) => (TYPE_PRIORITIES[b] ?? -Infinity) - (TYPE_PRIORITIES[a] ?? -Infinity)
+);
+```
+
+<Info>
+  The `other` type's `-Infinity` priority guarantees it always appears last in sorted type lists, regardless of what other types are present.
+</Info>

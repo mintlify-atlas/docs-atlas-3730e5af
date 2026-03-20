@@ -1,0 +1,153 @@
+---
+title: Architecture overview
+description: How Stremio Web is structured — the three-layer model, state management, services, and routing.
+---
+
+Stremio Web is a React single-page application that communicates with a Rust-compiled WebAssembly core. This page describes how those layers fit together.
+
+## Three-layer model
+
+```
+┌────────────────────────────────────────────────────┐
+│                   Stremio Web (React)               │
+│  Router │ Routes │ Components │ Services │ Common   │
+└─────────────────────┬──────────────────────────────┘
+                      │  CoreTransport (Web Worker)
+┌─────────────────────▼──────────────────────────────┐
+│              stremio-core-web (WASM)                │
+│  State models │ Actions │ Analytics │ Stream decode │
+└─────────────────────┬──────────────────────────────┘
+                      │  HTTP / manifest protocol
+┌─────────────────────▼──────────────────────────────┐
+│                     Addons                          │
+│   Catalog addons │ Stream addons │ Meta addons      │
+└────────────────────────────────────────────────────┘
+```
+
+- **Stremio Web** — the browser UI. Handles rendering, navigation, and user input.
+- **stremio-core-web** — the application logic, compiled to WASM and run in a Web Worker. Owns all state.
+- **Addons** — external HTTP services that provide catalogs, streams, and metadata.
+
+## stremio-core-web connection
+
+The bridge between the React layer and the WASM core is `CoreTransport` (`src/services/Core/CoreTransport.js`). It spawns a Web Worker (`worker.js`) and communicates through `@stremio/stremio-core-web/bridge`.
+
+```javascript
+// src/services/Core/CoreTransport.js
+const worker = new Worker(`${process.env.COMMIT_HASH}/scripts/worker.js`);
+const bridge = new Bridge(window, worker);
+```
+
+All UI-to-core communication uses four bridge methods:
+
+| Method | Purpose |
+|---|---|
+| `dispatch(action, field)` | Send an action to a core model |
+| `getState(field)` | Read a model's current state |
+| `analytics(event)` | Send an analytics event |
+| `decodeStream(stream)` | Decode a stream descriptor |
+
+The core pushes state updates back to the UI via the `NewState` event, which lists which models changed. The `CoreEvent` event carries named domain events such as `SettingsUpdated`.
+
+## State management
+
+Route-level components subscribe to core state via the `useModelState` hook (`src/common/useModelState.js`).
+
+```javascript
+const state = useModelState({
+    model: 'board',      // the core model name
+    action: { ... },     // optional dispatch on mount
+    map: (s) => s,       // optional state transform
+    deps: ['ctx'],       // optional cross-model dependencies
+    timeout: 0           // optional throttle (ms)
+});
+```
+
+Internally, `useModelState`:
+
+1. Reads the initial state synchronously through `CoreSuspender`.
+2. Dispatches an optional load action via `React.useInsertionEffect`.
+3. Listens for `NewState` events and re-fetches only when the relevant model changes.
+4. Pauses updates when the route is not focused (`useRouteFocused`).
+5. Dispatches `{ action: 'Unload' }` to the model on unmount.
+
+## CoreSuspender pattern
+
+`CoreSuspender` (`src/common/CoreSuspender.js`) implements the React Suspense data-fetching pattern for core state.
+
+The `withCoreSuspender` higher-order component wraps any component in a `React.Suspense` boundary and pre-fetches all model states before the component renders for the first time. This prevents layout flicker on navigation because the state is available synchronously via `getState()` inside the wrapped component tree.
+
+```javascript
+// App.js — the Router is wrapped before rendering
+const RouterWithProtectedRoutes = withCoreSuspender(
+    withProtectedRoutes(Router)
+);
+```
+
+The `useCoreSuspender` hook exposes `getState` and `decodeStream` to components that need synchronous access to pre-fetched state.
+
+## Services layer
+
+Five services are instantiated once in `App.js` and made available to all components through `ServicesContext`:
+
+<CardGroup cols={2}>
+  <Card title="Core" icon="cpu">
+    Manages the WASM core lifecycle and exposes `transport` for dispatch/getState.
+  </Card>
+  <Card title="Shell" icon="layout">
+    Bridges the native Qt shell when running in the desktop app via a WebChannel transport.
+  </Card>
+  <Card title="Chromecast" icon="cast">
+    Initialises the Google Cast SDK and exposes a Chromecast transport.
+  </Card>
+  <Card title="KeyboardShortcuts" icon="keyboard">
+    Global `keydown` listener that maps digit keys and Backspace to navigation.
+  </Card>
+  <Card title="DragAndDrop" icon="file">
+    `dragover`/`drop` listeners. Handles `.torrent` files dropped onto the window.
+  </Card>
+</CardGroup>
+
+See [Services](/reference/services) for full details on each service.
+
+## Router layer
+
+Stremio Web uses a custom hash-based router (`src/router/`) instead of React Router. The router:
+
+- Reads `window.location.hash` on every `hashchange` event.
+- Matches the path against a `viewsConfig` array of regexp–component pairs.
+- Maintains an ordered stack of active route views; navigating to a lower layer clears all views above it.
+- Wraps each view in a `RouteFocusedProvider` so that only the topmost view receives state updates.
+
+See [Routing](/reference/routing) for full details.
+
+## Application bootstrap
+
+`App.js` orchestrates startup in order:
+
+```
+1. Instantiate all five services
+2. Call service.start() for each
+3. Wait for both Core and Shell to become active (or error)
+4. If Core errored → render ErrorDialog
+5. Otherwise → render providers and Router
+```
+
+The `initialized` flag gates rendering. Until both Core and Shell have settled, a blank loader div is shown. This ensures no route component ever runs before the core transport is ready.
+
+## Provider tree
+
+Once initialised, the component tree inside `App.js` is:
+
+```
+ServicesProvider
+└── PlatformProvider
+    └── ToastProvider
+        └── TooltipProvider
+            └── FileDropProvider
+                └── ShortcutsProvider
+                    └── RouterWithProtectedRoutes
+                        └── [Route views]
+```
+
+Each provider adds a React context. `ServicesProvider` is outermost, so every component in the tree can call `useServices()` to access any service.

@@ -1,0 +1,90 @@
+---
+title: Discover
+description: Browse and filter content catalogs provided by your installed addons, with side-by-side previews and one-click library management.
+---
+
+The Discover page lets you browse the full catalogs published by your installed addons. You can filter by content type and genre, page through results, and preview metadata for any title — all without leaving the page.
+
+## URL structure
+
+Discover is a deep-linkable route. Each combination of addon, type, and catalog has a stable URL:
+
+```text
+/discover/:transportUrl?/:type?/:catalogId?
+```
+
+| Segment | Description |
+|---------|-------------|
+| `transportUrl` | The addon's transport URL (URL-encoded) |
+| `type` | Content type, e.g. `movie`, `series`, `channel` |
+| `catalogId` | The catalog identifier exposed by the addon manifest |
+
+Query parameters carry extra filters such as genre. For example, `?genre=Action` is appended to the URL when you pick a genre from the filter dropdowns.
+
+## Browsing content
+
+<Steps>
+  <Step title="Select a content type">
+    Use the **Type** dropdown at the top of the page to choose a content type (movie, series, channel, TV, and more). The catalog dropdown updates to show only catalogs that publish that type.
+  </Step>
+  <Step title="Select a catalog">
+    Choose a catalog from the **Catalog** dropdown. Each entry shows the catalog name and the addon it comes from.
+  </Step>
+  <Step title="Apply filters">
+    Extra filter dropdowns appear for any additional dimensions the catalog supports (genre, year, etc.). You can also open **All Filters** to see every available option in a modal.
+  </Step>
+  <Step title="Browse results">
+    Results are displayed as a grid of poster cards. Scroll to the bottom of the page to automatically load the next page of results.
+  </Step>
+  <Step title="Preview a title">
+    Click or focus any poster to open a compact metadata panel on the right side of the screen. The panel shows the description, release info, runtime, trailer, and genre links.
+  </Step>
+</Steps>
+
+## Filtering
+
+Filters come directly from the addon manifest. Each addon declares which extra dimensions its catalogs support. Common examples include:
+
+- **Genre** — filter by a single genre tag
+- **Year** — filter by release year
+- **Rating** — filter by score range
+
+<Note>
+  Not all catalogs support extra filters. If no filter dropdowns appear after selecting a catalog, that catalog does not expose additional dimensions.
+</Note>
+
+## Metadata preview panel
+
+When you select a title, a preview panel slides in on the right-hand side (or overlays on narrow screens) showing:
+
+<AccordionGroup>
+  <Accordion title="Basic metadata">
+    Title logo or name, background image, release year range, runtime, and description.
+  </Accordion>
+  <Accordion title="Links">
+    Genre, cast, and director tags that navigate to related catalog searches when clicked.
+  </Accordion>
+  <Accordion title="Trailer">
+    An inline trailer button when the addon provides a trailer stream.
+  </Accordion>
+  <Accordion title="Library toggle">
+    An **Add to library** or **Remove from library** button. Changes take effect immediately and sync across devices.
+  </Accordion>
+</AccordionGroup>
+
+## How addons contribute catalogs
+
+Every catalog you see in Discover is served by an installed addon. When you open Discover:
+
+1. Stremio reads the manifest of each installed addon.
+2. Addons that declare a `catalog` resource are listed in the **Catalog** dropdown.
+3. When you select a catalog, Stremio fetches the first page of results from the addon's transport URL.
+4. Applying a filter rebuilds the request URL with the new extra parameters and fetches fresh results.
+
+<Tip>
+  If a catalog you expect to see is missing, check that the addon is installed and enabled on the **Addons** page. If the addon is not installed, Discover shows an **Install addon** prompt when you navigate to that catalog's URL directly.
+</Tip>
+
+## Pagination
+
+Discover loads content one page at a time (up to 100 items per page). The next page loads automatically when you scroll near the bottom of the results grid. This continues until there are no more pages available.

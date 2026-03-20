@@ -1,0 +1,131 @@
+---
+title: 'DragAndDrop service'
+description: 'API reference for the DragAndDrop service, which handles file drop events for torrent files and subtitle files in Stremio Web.'
+---
+
+The `DragAndDrop` service registers `dragover` and `drop` listeners on `window` to handle files dragged into the browser window. When a `.torrent` file is dropped, it dispatches a `CreateTorrent` action to the core streaming server. Subtitle files (`application/x-subrip`, `text/vtt`) and empty-type files are accepted but currently produce no action (handled downstream by the player). Unsupported file types emit an `'error'` event.
+
+## Constructor
+
+```javascript
+const dragAndDrop = new DragAndDrop({ core });
+```
+
+<ParamField path="core" type="Core" required>
+  The active [`Core`](/reference/services/core) service instance. `DragAndDrop` uses `core.transport.dispatch()` to send the `CreateTorrent` action to the streaming server.
+</ParamField>
+
+## Properties
+
+<ResponseField name="active" type="boolean">
+  `true` when the service has registered its `dragover` and `drop` listeners on `window`. `false` before `start()` or after `stop()`.
+</ResponseField>
+
+## Methods
+
+### `start()`
+
+Registers `dragover` and `drop` event listeners on `window`. Does nothing if already active.
+
+```javascript
+dragAndDrop.start();
+```
+
+### `stop()`
+
+Removes the `dragover` and `drop` event listeners and sets `active` to `false`.
+
+```javascript
+dragAndDrop.stop();
+```
+
+### `on(name, listener)` / `off(name, listener)`
+
+Subscribe to or unsubscribe from service events.
+
+<ParamField path="name" type="string" required>
+  Event name: `'stateChanged'` or `'error'`.
+</ParamField>
+
+<ParamField path="listener" type="function" required>
+  Callback function.
+</ParamField>
+
+## Events
+
+<ResponseField name="stateChanged" type="event">
+  Emitted when `active` changes — i.e., after `start()` or `stop()`.
+</ResponseField>
+
+<ResponseField name="error" type="event">
+  Emitted when a drop cannot be handled. The payload describes the problematic file:
+
+  ```typescript
+  {
+      message: string; // Human-readable description: 'Failed to process file' or 'Unsupported file'
+      file: {
+          name: string; // e.g. 'video.mkv'
+          type: string; // MIME type, e.g. 'video/x-matroska'
+      };
+  }
+  ```
+
+  **`message: 'Failed to process file'`** — the file was a `.torrent` (`application/x-bittorrent`) but `arrayBuffer()` rejected or `core.transport.dispatch()` threw.
+
+  **`message: 'Unsupported file'`** — the file's MIME type is not in the accepted set.
+</ResponseField>
+
+---
+
+## Supported MIME types
+
+| MIME type | Behavior |
+|---|---|
+| `application/x-bittorrent` | Reads the file as an `ArrayBuffer`, converts to a `Uint8Array`, and dispatches `StreamingServer.CreateTorrent` to the core. |
+| `application/x-subrip` | Accepted (no-op — handled downstream by the video player). |
+| `text/vtt` | Accepted (no-op — handled downstream by the video player). |
+| `''` (empty string) | Accepted (no-op — typically folders or OS-specific virtual files). |
+| Any other type | Emits `'error'` with `message: 'Unsupported file'`. |
+
+## Core action dispatched
+
+When a torrent file is successfully read, the service dispatches the following action to the core:
+
+```javascript
+core.transport.dispatch({
+    action: 'StreamingServer',
+    args: {
+        action: 'CreateTorrent',
+        args: Array.from(new Uint8Array(torrent)) // byte array
+    }
+});
+```
+
+<Info>
+  The `dragover` listener calls `event.preventDefault()` to signal to the browser that the drop target accepts files, which suppresses the browser's default "open file" behavior.
+</Info>
+
+---
+
+## Usage example
+
+```javascript
+import Core from 'services/Core';
+import DragAndDrop from 'services/DragAndDrop';
+
+const core = new Core({ /* init args */ });
+const dragAndDrop = new DragAndDrop({ core });
+
+dragAndDrop.on('error', ({ message, file }) => {
+    console.warn(`DragAndDrop ${message}:`, file.name, `(${file.type})`);
+});
+
+// Start after core is ready
+core.on('stateChanged', () => {
+    if (core.active && !dragAndDrop.active) {
+        dragAndDrop.start();
+    }
+});
+
+core.start();
+```

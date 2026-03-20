@@ -1,0 +1,262 @@
+---
+title: Codebase architecture
+description: A guide to how the Stremio Web source code is organized.
+---
+
+Stremio Web is a React single-page application (SPA) bundled with Webpack. Business logic lives in the `stremio-core-web` WebAssembly module; the UI layer in `src/` is primarily responsible for rendering state and dispatching actions to the core.
+
+## Source tree overview
+
+```
+src/
+├── index.js            # Application entry point
+├── index.html          # HTML template
+├── modules.d.ts        # Global module type declarations
+├── types/              # Shared TypeScript type definitions
+├── App/                # Root component and router configuration
+├── routes/             # Page-level route components
+├── components/         # Reusable UI components
+├── services/           # Application services (Core, Chromecast, etc.)
+├── common/             # Shared hooks, utilities, and constants
+└── router/             # Custom client-side router
+```
+
+## src/App/
+
+The `App/` directory contains the root React component and the global router configuration.
+
+| File | Purpose |
+|------|---------|
+| `App.js` | Root component. Initialises services and renders the router. |
+| `routerViewsConfig.js` | Declares which route components are mounted in which router view layers. |
+| `DeepLinkHandler.js` | Handles deep-link URLs (e.g. `stremio://` scheme) and translates them to in-app navigation. |
+| `SearchParamsHandler.js` | Reads and propagates URL search parameters on navigation. |
+| `ServicesToaster.js` | Subscribes to service events and displays toast notifications. |
+| `withProtectedRoutes.js` | HOC that redirects unauthenticated users away from protected routes. |
+| `ErrorDialog/` | Full-screen error dialog rendered when a fatal error occurs. |
+| `ShortcutsModal/` | Modal that displays all registered keyboard shortcuts. |
+| `UpdaterBanner/` | Banner that prompts the user to reload when a new version is available. |
+
+### Router view layers
+
+`routerViewsConfig.js` defines five view layers, each rendered on top of the previous. This allows overlapping routes (e.g. a player on top of a catalog):
+
+1. **Board** — the home screen
+2. **Main views** — Intro, Discover, Library, Calendar, Search
+3. **MetaDetails** — content detail overlay
+4. **Overlay views** — Addons, Settings
+5. **Player** — full-screen video player
+
+## src/routes/
+
+Each subdirectory is a page-level component mounted by the router when its URL pattern matches.
+
+| Route | Path | Description |
+|-------|------|-------------|
+| `Board/` | `/` | Home screen with catalog rows |
+| `Intro/` | `/intro` | Onboarding and login screen |
+| `Discover/` | `/discover` | Browse catalogs by type and genre |
+| `Library/` | `/library`, `/continuewatching` | User library and continue-watching list |
+| `Calendar/` | `/calendar` | Episode release calendar |
+| `Search/` | `/search` | Full-text search across all addons |
+| `MetaDetails/` | `/detail` | Content detail view (synopsis, streams, cast) |
+| `Addons/` | `/addons` | Addon management |
+| `Settings/` | `/settings` | Application settings |
+| `Player/` | `/player` | Video player |
+| `NotFound/` | `*` | 404 fallback |
+
+## src/components/
+
+Shared UI components used across multiple routes. All components are re-exported from `index.ts`.
+
+<AccordionGroup>
+  <Accordion title="Navigation and layout">
+    | Component | Description |
+    |-----------|-------------|
+    | `NavBar/` | Top navigation bar with breadcrumbs and actions |
+    | `MainNavBars/` | Primary navigation sidebar/bar |
+    | `BottomSheet/` | Mobile-style slide-up panel |
+    | `ModalDialog/` | Accessible modal dialog wrapper |
+    | `Popup/` | Positioned floating popup |
+    | `ContextMenu/` | Right-click / long-press context menu |
+  </Accordion>
+
+  <Accordion title="Media and content">
+    | Component | Description |
+    |-----------|-------------|
+    | `MetaItem/` | Poster card for a single piece of content |
+    | `MetaRow/` | Horizontal scrolling row of `MetaItem`s |
+    | `MetaPreview/` | Expanded preview panel for selected content |
+    | `LibItem/` | Library entry card |
+    | `ContinueWatchingItem/` | Card variant with playback progress |
+    | `Video/` | Video playback element, wraps `stremio-video` |
+    | `Image/` | Lazy-loading image with fallback |
+  </Accordion>
+
+  <Accordion title="Forms and inputs">
+    | Component | Description |
+    |-----------|-------------|
+    | `Button/` | Base button with consistent focus/hover styles |
+    | `TextInput/` | Controlled text input |
+    | `NumberInput/` | Numeric input with increment/decrement |
+    | `Checkbox/` | Checkbox input |
+    | `Toggle/` | Binary on/off toggle |
+    | `RadioButton/` | Radio button |
+    | `Slider/` | Range slider |
+    | `Multiselect/` | Multi-option select dropdown |
+    | `MultiselectMenu/` | Menu variant of the multiselect |
+    | `Chips/` | Horizontal chip/tag selector |
+    | `ColorInput/` | Color picker input |
+    | `SearchBar/` | Search input with clear button |
+  </Accordion>
+
+  <Accordion title="Overlays and feedback">
+    | Component | Description |
+    |-----------|-------------|
+    | `AddonDetailsModal/` | Modal showing addon info and install controls |
+    | `EventModal/` | Generic event/announcement modal |
+    | `SharePrompt/` | Share-to prompt overlay |
+    | `Transition/` | Animated mount/unmount wrapper |
+    | `DelayedRenderer/` | Defers rendering until after a delay |
+    | `HorizontalScroll/` | Scroll container with arrow navigation |
+    | `ShortcutsGroup/` | Rendered group of keyboard shortcut entries |
+  </Accordion>
+</AccordionGroup>
+
+## src/services/
+
+Services are long-lived singletons initialised at app startup and provided to the component tree via `ServicesContext`.
+
+<CardGroup cols={2}>
+  <Card title="Core" icon="cpu">
+    Wraps `@stremio/stremio-core-web`. Manages the WebAssembly core lifecycle and exposes a `transport` object used to `dispatch` actions and `getState` from any model. Components subscribe to state via the `useModelState` hook in `common/`.
+  </Card>
+  <Card title="Shell" icon="terminal">
+    Communicates with the native Stremio shell (desktop app wrapper) when running inside it. Provides APIs for opening external links, controlling the window, and handling native events.
+  </Card>
+  <Card title="Chromecast" icon="cast">
+    Manages the Google Cast SDK lifecycle. Initialises the cast session, handles device discovery, and bridges play/pause/seek commands between the UI and a cast receiver.
+  </Card>
+  <Card title="KeyboardShortcuts" icon="keyboard">
+    Registers global keyboard event listeners and maps key combinations to application actions. Shortcuts are declaratively defined and displayed via the `ShortcutsModal`.
+  </Card>
+</CardGroup>
+
+### ServicesContext
+
+`ServicesContext/` exposes a `useServices()` hook that components use to access any service:
+
+```javascript
+const { core, shell, chromecast } = useServices();
+```
+
+### State management
+
+Stremio Web does not use Redux or a similar global store. State is owned by `stremio-core-web` (the WASM module) and fetched on demand:
+
+1. A route component calls `useModelState({ model: 'discover', ... })`.
+2. `useModelState` calls `core.transport.getState('discover')` to read the initial state.
+3. When the core emits a `NewState` event, the hook re-fetches and updates local React state using `setState`.
+4. Actions are dispatched with `core.transport.dispatch({ action: 'LoadDiscover', ... }, 'discover')`.
+
+This keeps all business logic and side effects inside the WASM core while the React layer remains a pure rendering layer.
+
+## src/common/
+
+Shared utilities, constants, and custom React hooks used across the codebase.
+
+### Hooks
+
+| Hook | Description |
+|------|-------------|
+| `useModelState` | Subscribes a component to a stremio-core-web model |
+| `useProfile` | Returns the current user profile from the core |
+| `useSettings` | Returns application settings |
+| `useStreamingServer` | Returns streaming server status and settings |
+| `useNotifications` | Returns notification data |
+| `useShell` | Returns the Shell service instance |
+| `useBinaryState` | Boolean state with `setTrue` / `setFalse` helpers |
+| `useFullscreen` | Fullscreen API wrapper |
+| `useInterval` | `setInterval` in a hook |
+| `useTimeout` | `setTimeout` in a hook |
+| `useAnimationFrame` | `requestAnimationFrame` loop hook |
+| `useOutsideClick` | Fires a callback when a click occurs outside a ref |
+| `useOnScrollToBottom` | Fires a callback when the user scrolls to the bottom |
+| `useOrientation` | Returns device orientation |
+| `usePWA` | PWA install prompt handling |
+| `useLiveRef` | Ref that always holds the latest value of a variable |
+| `useLanguageSorting` | Returns a comparator for sorting by current language |
+| `useTranslate` | i18next translation hook wrapper |
+| `useTorrent` | Torrent magnet link handling |
+
+### Utilities
+
+| File | Description |
+|------|-------------|
+| `CONSTANTS.js` | Application-wide constants |
+| `routesRegexp.js` | URL pattern regular expressions for each route |
+| `Platform/` | Platform/browser detection utilities |
+| `Shortcuts/` | Keyboard shortcut definitions |
+| `Toast/` | Imperative toast notification system |
+| `Tooltips/` | Tooltip positioning utilities |
+| `CoreSuspender.js` | React Suspense integration for the core WASM module |
+| `getVisibleChildrenRange.js` | Calculates which children are visible in a scroll container |
+| `comparatorWithPriorities.js` | Sorting comparator with priority weights |
+
+## src/router/
+
+A custom client-side router built for Stremio's layered view model. It does not use React Router.
+
+| Module | Description |
+|--------|-------------|
+| `Router/` | Core router component. Matches the current URL against view configs and mounts the appropriate route components. |
+| `Route/` | Renders a single route. Passes URL params as props to the route component. |
+| `Modal/` | Router-managed modal layer. Modals are pushed onto a stack and dismissed in order. |
+| `ModalsContainerContext/` | Context providing access to the modal stack. |
+| `RouteFocusedContext/` | Context that exposes whether the current route is the focused (top-most visible) layer. Used by `useModelState` to pause updates for background routes. |
+
+The `stremio-router` path alias (configured in `webpack.config.js` and `tsconfig.json`) maps to `src/router/`, allowing imports like:
+
+```javascript
+const { useRouteFocused } = require('stremio-router');
+```
+
+## Build system
+
+The build is fully managed by Webpack 5, configured in `webpack.config.js`.
+
+### Loaders
+
+| Loader | Handles |
+|--------|---------|
+| `babel-loader` | `.js` files — transpiles with `@babel/preset-env` and `@babel/preset-react` |
+| `ts-loader` | `.ts` / `.tsx` files — TypeScript compilation |
+| `less-loader` + `css-loader` + `postcss-loader` | `.less` files — compiles Less, applies autoprefixer and cssnano |
+| `thread-loader` | Runs all of the above in a worker thread pool for faster builds |
+
+### CSS modules
+
+All `.less` files use CSS Modules with local scoping. Class names are hashed in the format `[local]-[hash:base64:5]`.
+
+### Path aliases
+
+| Alias | Resolves to |
+|-------|-------------|
+| `stremio/*` | `src/*` |
+| `stremio-router` | `src/router/` |
+
+### Output
+
+Production builds output to `build/`. All script and style filenames include the current Git commit hash, which acts as a cache-busting mechanism. A Workbox service worker is generated in production mode for offline support.
+
+### Environment variables
+
+The following environment variables are injected via `webpack.EnvironmentPlugin`:
+
+| Variable | Default | Description |
+|----------|---------|-------------|
+| `VERSION` | From `package.json` | Application version string |
+| `COMMIT_HASH` | Git HEAD hash | Current commit hash |
+| `DEBUG` | `true` in dev | Enables debug logging |
+| `SERVICE_WORKER_DISABLED` | `false` | Disables the PWA service worker |
+| `SENTRY_DSN` | `null` | Sentry error reporting DSN |

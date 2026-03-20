@@ -1,0 +1,112 @@
+---
+title: 'KeyboardShortcuts service'
+description: 'API reference for the KeyboardShortcuts service, which handles global keyboard navigation shortcuts in Stremio Web.'
+---
+
+The `KeyboardShortcuts` service registers a global `keydown` listener on `window` and maps digit keys to Stremio Web navigation routes. It is intentionally minimal — no configuration, no shortcut registration API — just a lifecycle (`start`/`stop`) and a `stateChanged` event.
+
+## Constructor
+
+```javascript
+const keyboardShortcuts = new KeyboardShortcuts();
+```
+
+No arguments.
+
+## Properties
+
+<ResponseField name="active" type="boolean">
+  `true` when the service has registered its `keydown` listener on `window`. `false` before `start()` or after `stop()`.
+</ResponseField>
+
+## Methods
+
+### `start()`
+
+Adds the global `keydown` event listener. Does nothing if already active.
+
+```javascript
+keyboardShortcuts.start();
+```
+
+### `stop()`
+
+Removes the global `keydown` event listener and sets `active` to `false`.
+
+```javascript
+keyboardShortcuts.stop();
+```
+
+## Events
+
+<ResponseField name="stateChanged" type="event">
+  Emitted when `active` changes (i.e., after `start()` or `stop()`).
+
+  ```javascript
+  keyboardShortcuts.on('stateChanged', () => {
+      console.log('KeyboardShortcuts active:', keyboardShortcuts.active);
+  });
+  ```
+
+  <Note>
+    `KeyboardShortcuts` uses an internal `EventEmitter` but does **not** expose `on`/`off` methods publicly. The `stateChanged` event is an internal signal used by the application shell. External consumers should observe `core.active` or similar top-level state instead.
+  </Note>
+</ResponseField>
+
+---
+
+## Registered shortcuts
+
+The handler fires on `keydown`. All shortcuts are **suppressed** when any of the following are true:
+
+- `event.keyboardShortcutPrevented` is `true` (allows components to opt out)
+- `event.target.tagName === 'INPUT'` (prevents hijacking text input)
+- Any modifier key is held: `ctrlKey`, `altKey`, `shiftKey`, or `metaKey`
+
+<Note>
+  The `Backspace` key handling is a special case — it reads `event.ctrlKey` inside the handler body after the modifier check has already gated entry. In practice, `Backspace` with `Ctrl` held will **not** fire because `ctrlKey` is caught by the outer guard. The `Ctrl+Backspace` branch is therefore unreachable in the current implementation.
+</Note>
+
+### Navigation shortcuts
+
+| Key | Route | Description |
+|---|---|---|
+| `0` | `#/search` | Search |
+| `1` | `#/` | Board (home) |
+| `2` | `#/discover` | Discover |
+| `3` | `#/library` | Library |
+| `4` | `#/calendar` | Calendar |
+| `5` | `#/addons` | Add-ons |
+| `6` | `#/settings` | Settings |
+| `Backspace` | `history.back()` | Navigate back |
+
+All navigation shortcuts call `event.preventDefault()` to suppress browser defaults before changing `window.location`.
+
+---
+
+## Opting out of shortcuts in a component
+
+Set `event.keyboardShortcutPrevented = true` on a synthetic or native keyboard event before it bubbles to `window` to prevent the service from handling it:
+
+```javascript
+function handleKeyDown(event) {
+    // Mark this event so KeyboardShortcuts ignores it
+    event.keyboardShortcutPrevented = true;
+}
+```
+
+---
+
+## Usage example
+
+```javascript
+import KeyboardShortcuts from 'services/KeyboardShortcuts';
+
+const keyboardShortcuts = new KeyboardShortcuts();
+
+// Start listening after the app mounts
+keyboardShortcuts.start();
+
+// Stop when tearing down (e.g., in tests or SSR)
+keyboardShortcuts.stop();
+```

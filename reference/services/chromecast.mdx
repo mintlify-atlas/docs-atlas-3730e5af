@@ -1,0 +1,235 @@
+---
+title: 'Chromecast service'
+description: 'API reference for the Chromecast service, which integrates the Google Cast SDK and manages receiver sessions.'
+---
+
+The `Chromecast` service wraps the Google Cast Web Sender SDK and manages the full lifecycle of a Chromecast receiver session. It follows the same lifecycle shape as the [`Core`](/reference/services/core) service: an outer service class manages state, while an inner transport handles the raw Cast API calls.
+
+<Info>
+  The Chromecast receiver app ID is `1634F54B`. This value is defined in `CONSTANTS.js` as `CHROMECAST_RECEIVER_APP_ID` and used when configuring the Cast context options.
+</Info>
+
+## Constructor
+
+```javascript
+const chromecast = new Chromecast();
+```
+
+The `Chromecast` constructor takes no arguments.
+
+## Properties
+
+All properties are read-only (defined with `Object.defineProperties`).
+
+<ResponseField name="active" type="boolean">
+  `true` once the Cast SDK is available and `ChromecastTransport` has emitted `'init'`. Resets to `false` when `stop()` is called or the SDK is unavailable.
+</ResponseField>
+
+<ResponseField name="error" type="Error | null">
+  Set to `new Error('Google Cast API not available')` if `ChromecastTransport` fails to initialize. `null` otherwise, or after `stop()` resets it.
+</ResponseField>
+
+<ResponseField name="starting" type="boolean">
+  `true` while the `ChromecastTransport` is being created and waiting for the Cast SDK availability callback.
+</ResponseField>
+
+<ResponseField name="transport" type="ChromecastTransport | null">
+  The active [`ChromecastTransport`](#chromecasettransport) instance, or `null` when not running.
+</ResponseField>
+
+## Methods
+
+### `start()`
+
+Creates a `ChromecastTransport` and waits for the Cast SDK to become available. Does nothing if already `active`, `starting`, or errored.
+
+```javascript
+chromecast.start();
+```
+
+### `stop()`
+
+Tears down the transport and resets all state. Safe to call at any time.
+
+```javascript
+chromecast.stop();
+```
+
+### `on(name, listener)` / `off(name, listener)`
+
+Subscribe to or unsubscribe from service-level events.
+
+<ParamField path="name" type="string" required>
+  Event name. The `Chromecast` service itself emits only `'stateChanged'`.
+</ParamField>
+
+<ParamField path="listener" type="function" required>
+  Callback function.
+</ParamField>
+
+## Events
+
+<ResponseField name="stateChanged" type="event">
+  Emitted whenever `active`, `error`, or `starting` changes.
+
+  ```javascript
+  chromecast.on('stateChanged', () => {
+      console.log('Chromecast state:', {
+          active: chromecast.active,
+          error: chromecast.error,
+          starting: chromecast.starting,
+      });
+  });
+  ```
+</ResponseField>
+
+---
+
+## ChromecastTransport
+
+`ChromecastTransport` is created internally by `Chromecast.start()`. It registers Cast SDK event listeners and provides methods to interact with the current session.
+
+### Initialization
+
+On construction, `ChromecastTransport`:
+
+1. Waits for `window.__onGCastApiAvailable` — the callback injected by the Cast SDK loader script.
+2. Registers listeners on `CastContext` for `CAST_STATE_CHANGED` and `SESSION_STATE_CHANGED`.
+3. Emits `'init'` on success, or `'init-error'` if the Cast API is not available.
+
+<Note>
+  The Cast SDK must be loaded via the standard `<script>` tag before `Chromecast.start()` is called. `ChromecastTransport` will wait indefinitely for `window.__onGCastApiAvailable` to fire if the SDK has not yet loaded.
+</Note>
+
+### Message chunking
+
+Messages sent to the receiver are serialized with `JSON.stringify` and split into chunks of **20,000 characters** each. Each chunk is sent as a separate Cast message on the namespace `urn:x-cast:com.stremio`. The receiver reassembles chunks by matching the shared `id` (generated with `hat()`) and ordering by `index`/`length`.
+
+```typescript
+// Chunk envelope structure
+{
+    id: string;     // Shared message ID (generated per send)
+    chunk: string;  // Slice of the serialized message
+    index: number;  // Zero-based position of this chunk
+    length: number; // Total number of chunks
+}
+```
+
+### Methods
+
+<ResponseField name="getCastState()" type="CastState">
+  Returns the current cast state from `CastContext.getInstance()`.
+
+  ```javascript
+  const state = chromecast.transport.getCastState();
+  // e.g. cast.framework.CastState.CONNECTED
+  ```
+</ResponseField>
+
+<ResponseField name="getSessionState()" type="SessionState">
+  Returns the current session state from `CastContext.getInstance()`.
+</ResponseField>
+
+<ResponseField name="getCastDevice()" type="Device | null">
+  Returns the device object of the current cast session, or `null` if no session is active.
+
+  ```javascript
+  const device = chromecast.transport.getCastDevice();
+  if (device) console.log(device.friendlyName);
+  ```
+</ResponseField>
+
+<ResponseField name="setOptions(options)" type="void">
+  Configures the Cast context. Call this with the receiver app ID before requesting a session.
+
+  ```javascript
+  chromecast.transport.setOptions({
+      receiverApplicationId: '1634F54B',
+      autoJoinPolicy: chrome.cast.AutoJoinPolicy.ORIGIN_SCOPED,
+  });
+  ```
+
+  <ParamField path="options" type="CastOptions" required>
+    Options object passed to `CastContext.getInstance().setOptions()`.
+  </ParamField>
+</ResponseField>
+
+<ResponseField name="requestSession()" type="Promise<void>">
+  Opens the Cast device picker and starts a session.
+
+  ```javascript
+  await chromecast.transport.requestSession();
+  ```
+</ResponseField>
+
+<ResponseField name="endCurrentSession(stopCasting)" type="void">
+  Ends the current session.
+
+  <ParamField path="stopCasting" type="boolean" required>
+    If `true`, stops the receiver app. If `false`, disconnects the sender only.
+  </ParamField>
+</ResponseField>
+
+<ResponseField name="sendMessage(message)" type="Promise<void[]>">
+  Serializes and sends a message to the receiver over `urn:x-cast:com.stremio`. The message is automatically chunked if it exceeds 20,000 characters.
+
+  Rejects with `Error('Session not started')` if no session is currently active.
+
+  ```javascript
+  await chromecast.transport.sendMessage({ type: 'play', stream: { ... } });
+  ```
+
+  <ParamField path="message" type="object" required>
+    Any JSON-serializable object.
+  </ParamField>
+</ResponseField>
+
+<ResponseField name="on(name, listener)" type="void">
+  Subscribe to transport events. In addition to `'init'` and `'init-error'`, the transport forwards all Cast SDK events:
+
+  | Event name | Source |
+  |---|---|
+  | `cast.framework.CastContextEventType.CAST_STATE_CHANGED` | Cast context |
+  | `cast.framework.CastContextEventType.SESSION_STATE_CHANGED` | Cast context |
+  | `cast.framework.CastSession.APPLICATION_STATUS_CHANGED` | Active session |
+  | `cast.framework.CastSession.APPLICATION_METADATA_CHANGED` | Active session |
+  | `cast.framework.CastSession.ACTIVE_INPUT_STATE_CHANGED` | Active session |
+  | `cast.framework.CastSession.VOLUME_CHANGED` | Active session |
+  | `cast.framework.CastSession.MEDIA_SESSION` | Active session |
+  | `'message'` | Incoming receiver message (reassembled from chunks) |
+  | `'message-error'` | Failed to parse an incoming message |
+</ResponseField>
+
+<ResponseField name="removeAllListeners()" type="void">
+  Removes all listeners. Called internally by `Chromecast.stop()`.
+</ResponseField>
+
+---
+
+## Usage example
+
+```javascript
+import Chromecast from 'services/Chromecast';
+
+const chromecast = new Chromecast();
+
+chromecast.on('stateChanged', () => {
+    if (chromecast.active) {
+        // Configure the Cast context with the receiver app ID
+        chromecast.transport.setOptions({
+            receiverApplicationId: '1634F54B',
+        });
+    }
+    if (chromecast.error) {
+        console.warn('Cast SDK unavailable:', chromecast.error.message);
+    }
+});
+
+chromecast.start();
+
+// Later — request a cast session:
+await chromecast.transport.requestSession();
+
+// Send a playback command to the receiver:
+await chromecast.transport.sendMessage({ type: 'play', stream: { url: '...' } });
+```

@@ -1,0 +1,240 @@
+---
+title: 'Core service'
+description: 'API reference for the Core service, which manages the stremio-core-web WebWorker transport lifecycle.'
+---
+
+The `Core` service is the central bridge between the Stremio Web frontend and the [`stremio-core-web`](https://github.com/stremio/stremio-core-web) Rust backend. It manages a [`CoreTransport`](#coretransport) that runs the core logic inside a WebWorker, and exposes a simple lifecycle API for starting, stopping, and observing state.
+
+## Constructor
+
+```javascript
+const core = new Core(args);
+```
+
+<ParamField path="args" type="object" required>
+  Initialization arguments forwarded verbatim to the core WebWorker via `bridge.call(['init'], [args])`. The shape of this object is determined by the `stremio-core-web` init contract.
+</ParamField>
+
+## Properties
+
+All properties are read-only (defined with `Object.defineProperties`).
+
+<ResponseField name="active" type="boolean">
+  `true` when the underlying `CoreTransport` has successfully initialized. Resets to `false` when `stop()` is called or an error occurs.
+</ResponseField>
+
+<ResponseField name="error" type="Error | null">
+  Set to an `Error` instance if the transport fails to initialize (`'Stremio Core Transport initialization failed'`). `null` otherwise, or after `stop()` clears it.
+</ResponseField>
+
+<ResponseField name="starting" type="boolean">
+  `true` while the transport is being created and waiting for the `init` event. Resets to `false` once initialization succeeds or fails.
+</ResponseField>
+
+<ResponseField name="transport" type="CoreTransport | null">
+  The active [`CoreTransport`](#coretransport) instance, or `null` when the service is not running.
+</ResponseField>
+
+## Methods
+
+### `start()`
+
+Initializes the `CoreTransport` and begins the connection to the core WebWorker. Does nothing if the service is already `active`, `starting`, or has an `error`.
+
+```javascript
+core.start();
+```
+
+<Note>
+  `start()` is idempotent only in the sense that it exits early when already running or errored. To retry after an error, call `stop()` first — but note that once `error` is set, `stop()` must be called to clear it before `start()` will run again.
+</Note>
+
+### `stop()`
+
+Tears down the transport and resets all state (`active`, `error`, `starting`) to their defaults. Safe to call at any time.
+
+```javascript
+core.stop();
+```
+
+### `on(name, listener)`
+
+Registers a listener on the internal `EventEmitter`.
+
+<ParamField path="name" type="string" required>
+  The event name. Currently only `'stateChanged'` is emitted by `Core` itself.
+</ParamField>
+
+<ParamField path="listener" type="function" required>
+  Callback invoked when the event fires.
+</ParamField>
+
+### `off(name, listener)`
+
+Removes a previously registered listener.
+
+<ParamField path="name" type="string" required>
+  The event name.
+</ParamField>
+
+<ParamField path="listener" type="function" required>
+  The exact function reference passed to `on()`.
+</ParamField>
+
+## Events
+
+<ResponseField name="stateChanged" type="event">
+  Emitted whenever any of `active`, `error`, or `starting` changes. Consumers should re-read these properties after receiving this event.
+
+  ```javascript
+  core.on('stateChanged', () => {
+      console.log({ active: core.active, error: core.error, starting: core.starting });
+  });
+  ```
+</ResponseField>
+
+---
+
+## CoreTransport
+
+`CoreTransport` wraps the `stremio-core-web` bridge and WebWorker. It is created internally by `Core.start()` and exposed via `core.transport`.
+
+### Constructor
+
+```javascript
+// Created internally — do not instantiate directly.
+const transport = new CoreTransport(args);
+```
+
+On construction the transport:
+1. Spawns a WebWorker at `${COMMIT_HASH}/scripts/worker.js`.
+2. Creates a `Bridge` between `window` and the worker.
+3. Calls `bridge.call(['init'], [args])` — emitting `'init'` on success or `'error'` on failure.
+4. Installs `window.onCoreEvent` to forward core runtime events into the transport's event emitter.
+
+### Methods
+
+<ResponseField name="getState(field)" type="Promise<object>">
+  Fetches the current state of a named model from the core.
+
+  ```javascript
+  const state = await core.transport.getState('catalogWithFilters');
+  ```
+
+  <ParamField path="field" type="string" required>
+    The model name to retrieve.
+  </ParamField>
+</ResponseField>
+
+<ResponseField name="getDebugState()" type="Promise<object>">
+  Returns the full debug state from the core with no arguments.
+
+  ```javascript
+  const debug = await core.transport.getDebugState();
+  ```
+</ResponseField>
+
+<ResponseField name="dispatch(action, field?)" type="Promise<void>">
+  Dispatches an action to the core runtime. Also passes `location.hash` as context.
+
+  ```javascript
+  await core.transport.dispatch(
+      { action: 'Ctx', args: { action: 'Authenticate', args: { ... } } }
+  );
+  ```
+
+  <ParamField path="action" type="Action" required>
+    Action object with the shape:
+
+    ```typescript
+    type Action = {
+        action: string;
+        args?: {
+            model?: string;
+            action?: string;
+            args?: any;
+        };
+    };
+    ```
+  </ParamField>
+
+  <ParamField path="field" type="string">
+    Optional model field scope for the action.
+  </ParamField>
+</ResponseField>
+
+<ResponseField name="decodeStream(stream)" type="Promise<Stream>">
+  Decodes a raw stream descriptor string into a structured `Stream` object.
+
+  ```javascript
+  const stream = await core.transport.decodeStream(rawStreamString);
+  ```
+
+  <ParamField path="stream" type="string" required>
+    The raw stream string to decode.
+  </ParamField>
+</ResponseField>
+
+<ResponseField name="analytics(event)" type="Promise<void>">
+  Sends an analytics event to the core. Also passes `location.hash` as context.
+
+  ```javascript
+  await core.transport.analytics({ event: 'playerOpen', args: { type: 'movie' } });
+  ```
+
+  <ParamField path="event" type="AnalyticsEvent" required>
+    ```typescript
+    type AnalyticsEvent = {
+        event: string;
+        args: object;
+    };
+    ```
+  </ParamField>
+</ResponseField>
+
+<ResponseField name="on(name, listener)" type="void">
+  Subscribe to transport-level events (`'init'`, `'error'`, plus any events forwarded from `window.onCoreEvent`).
+</ResponseField>
+
+<ResponseField name="off(name, listener)" type="void">
+  Unsubscribe from a transport-level event.
+</ResponseField>
+
+<ResponseField name="removeAllListeners()" type="void">
+  Removes all listeners. Called internally by `Core.stop()`.
+</ResponseField>
+
+---
+
+## Usage example
+
+```javascript
+import Core from 'services/Core';
+
+const core = new Core({ /* stremio-core-web init args */ });
+
+core.on('stateChanged', () => {
+    if (core.active) {
+        console.log('Core is ready');
+    } else if (core.error) {
+        console.error('Core failed:', core.error);
+    }
+});
+
+core.start();
+
+// Later, dispatch an action:
+if (core.active) {
+    await core.transport.dispatch({
+        action: 'Ctx',
+        args: { action: 'Authenticate', args: { key: '...' } }
+    });
+}
+
+// Shutdown:
+core.stop();
+```
+
+<Info>
+  The `Core` service is a singleton in practice — only one instance should be created per application session. All components that need to interact with the core access it through the shared instance.
+</Info>

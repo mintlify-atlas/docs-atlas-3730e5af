@@ -1,0 +1,207 @@
+---
+title: Video player
+description: Full-featured video player with subtitle support, audio track selection, playback speed control, Chromecast, external player integration, and keyboard shortcuts.
+---
+
+The Stremio player handles video playback for all stream types. It supports embedded and external subtitle tracks, multiple audio tracks, adjustable playback speed, Chromecast casting, and a range of keyboard shortcuts.
+
+## Player controls
+
+The control bar appears at the bottom of the screen and auto-hides after three seconds of inactivity during playback.
+
+<CardGroup cols={2}>
+  <Card title="Seek bar" icon="sliders">
+    Scrub through the video. A buffered-content indicator shows how much has been pre-loaded. Click anywhere on the bar or drag the handle to seek.
+  </Card>
+  <Card title="Play / Pause" icon="play">
+    Toggle playback. Also accessible by clicking the video area or pressing `Space`.
+  </Card>
+  <Card title="Volume" icon="volume-2">
+    Adjust volume with the slider, click the icon to mute, or scroll the mouse wheel over the player.
+  </Card>
+  <Card title="Next video" icon="skip-forward">
+    Skip to the next episode in a series. The button is visible when a next video is available.
+  </Card>
+  <Card title="Subtitles" icon="captions">
+    Open the subtitles menu to choose a language and track variant.
+  </Card>
+  <Card title="Audio tracks" icon="audio-lines">
+    Select an audio language or track when multiple are available.
+  </Card>
+  <Card title="Playback speed" icon="gauge">
+    Choose a playback speed from 0.25× to 2×.
+  </Card>
+  <Card title="Chromecast" icon="cast">
+    Cast to a Chromecast device on your local network.
+  </Card>
+  <Card title="Episodes panel" icon="list">
+    Open the side drawer to browse and jump to other episodes without leaving the player.
+  </Card>
+  <Card title="More options" icon="ellipsis">
+    Copy the stream link, download the video or subtitles file, or send the stream to an external device.
+  </Card>
+</CardGroup>
+
+## Subtitles
+
+### Track sources
+
+The player loads subtitles from three sources:
+
+| Source | Description |
+|--------|-------------|
+| Embedded | Subtitle tracks baked into the video container |
+| Addon | External `.srt` or `.vtt` files served by an installed addon |
+| Local | Files you drag and drop onto the player window |
+
+<Tip>
+  Drag an `.srt` or `.vtt` file directly onto the player window to load it as a local subtitle track.
+</Tip>
+
+### Subtitle settings
+
+Open the subtitles menu (`S` key or the CC button in the control bar) to access these settings:
+
+| Setting | Options | Description |
+|---------|---------|-------------|
+| Language | Any available language | Filters track variants to the selected language |
+| Size | 75%, 100%, 125%, 150%, 175%, 200%, 250% | Scales subtitle text relative to the default |
+| Delay | Steps of 0.25 s | Shifts subtitle timing forward or backward |
+| Vertical position | 0–100% | Moves the subtitle baseline up or down on screen |
+
+### Subtitle fonts
+
+The default subtitle font can be changed in Settings. Available fonts:
+
+`PlusJakartaSans`, `Arial`, `Helvetica`, `Times New Roman`, `Verdana`, `Courier`, `Lucida Console`, `sans-serif`, `serif`, `monospace`
+
+## Playback speed
+
+Open the speed menu (`R` key) to choose from the following rates:
+
+`2×`, `1.75×`, `1.5×`, `1.25×`, `1×`, `0.75×`, `0.5×`, `0.25×`
+
+<Note>
+  Hold `Space` (or hold the left mouse button) to temporarily play at 2× speed. Release to return to normal speed.
+</Note>
+
+## Seek time durations
+
+The seek duration used when pressing the arrow keys is configurable in Settings. Available durations:
+
+| Duration | Value |
+|----------|-------|
+| 3 s | Short seek |
+| 5 s | Short seek |
+| 10 s | Standard seek |
+| 15 s | Standard seek |
+| 20 s | Long seek |
+| 30 s | Long seek |
+
+Two separate durations can be configured: a **short seek** (single arrow key press) and a **long seek** (Shift + arrow key press).
+
+## Next video popup
+
+When you are near the end of a series episode and a next episode is available, a popup appears with:
+
+- The next episode's thumbnail and title (e.g. `S2E4`)
+- A **Watch now** button that navigates to the next episode immediately
+- A **Dismiss** button to close the popup and finish the current episode
+
+The popup appears based on a configurable duration before the end of the episode. It can be dismissed permanently for the current episode with the Dismiss button, or you can let binge-watch mode handle the transition automatically.
+
+## Chromecast
+
+Chromecast support is built into the player. The cast button in the control bar activates when a Chromecast device is detected on your local network.
+
+<Steps>
+  <Step title="Start playback">
+    Open any stream in the Stremio player.
+  </Step>
+  <Step title="Click the cast button">
+    Press the cast icon in the control bar. A device picker appears.
+  </Step>
+  <Step title="Select your device">
+    Choose the Chromecast receiver from the list. Stremio switches the stream to the casting session and the local player pauses.
+  </Step>
+  <Step title="Stop casting">
+    Click the cast icon again to end the session and resume local playback.
+  </Step>
+</Steps>
+
+<Info>
+  When casting is active, the stream is transcoded through the streaming server to a format the Chromecast receiver can handle.
+</Info>
+
+## External players
+
+You can configure Stremio to open streams in an external player instead of the built-in one. Available players depend on your platform:
+
+<Tabs>
+  <Tab title="Android">
+    - VLC
+    - MX Player
+    - Just Player
+    - Allow choosing (system picker)
+    - M3U Playlist
+  </Tab>
+  <Tab title="iOS / visionOS">
+    - VLC
+    - Outplayer
+    - Infuse
+    - Vidhub
+    - M3U Playlist
+    - Moonplayer (visionOS only)
+  </Tab>
+  <Tab title="macOS">
+    - MPV
+    - IINA
+    - Infuse
+    - M3U Playlist
+  </Tab>
+  <Tab title="Windows / Linux">
+    - M3U Playlist
+  </Tab>
+</Tabs>
+
+Configure your preferred external player in **Settings → Player → External player**.
+
+## Keyboard shortcuts
+
+### General
+
+| Key | Action |
+|-----|--------|
+| `0` | Go to search |
+| `1`–`6` | Navigate sidebar tabs |
+| `F` | Toggle fullscreen |
+| `Escape` | Go back / exit |
+| `Ctrl` + `/` | Show shortcuts reference |
+
+### Player
+
+| Key | Action |
+|-----|--------|
+| `Space` | Play / Pause |
+| `→` | Seek forward (short duration) |
+| `Shift` + `→` | Seek forward (long duration) |
+| `←` | Seek backward (short duration) |
+| `Shift` + `←` | Seek backward (long duration) |
+| `↑` | Volume up |
+| `↓` | Volume down |
+| `M` | Toggle mute |
+| `C` | Toggle subtitles on/off |
+| `S` | Open subtitles menu |
+| `A` | Open audio menu |
+| `I` | Open info / episodes panel |
+| `R` | Open playback speed menu |
+| `D` | Open statistics menu |
+| `G` | Increase subtitle delay |
+| `H` | Decrease subtitle delay |
+| `=` | Increase subtitle size |
+| `-` | Decrease subtitle size |
+| `Shift` + `N` | Play next video |
+
+## Statistics
+
+Press `D` or click the network icon in the control bar to open the statistics panel. It shows real-time playback metrics including buffer health, download speed, and stream info. This option is only available for torrent streams.

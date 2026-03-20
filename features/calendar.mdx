@@ -1,0 +1,78 @@
+---
+title: Calendar
+description: Track upcoming and past episode releases for series in your library, laid out in a monthly calendar and a scrollable day-by-day list.
+---
+
+The Calendar page gives you a monthly overview of episode air dates for all series you are following in your library. Click any date to see which episodes aired that day and jump straight into watching.
+
+<Note>
+  The Calendar requires you to be signed in. It shows data only for series saved in your library.
+</Note>
+
+## Calendar layout
+
+The Calendar page has two parallel views that stay in sync:
+
+<CardGroup cols={2}>
+  <Card title="Monthly table" icon="calendar">
+    A standard month grid (Monday–Sunday) where each day cell is highlighted when at least one episode aired on that date. Today's date is visually distinguished.
+  </Card>
+  <Card title="Day list" icon="list">
+    A scrollable vertical list of days with episodes, shown alongside the table. Each day expands to show every episode that aired, with the series name, season, and episode number.
+  </Card>
+</CardGroup>
+
+## Navigating months
+
+Use the month selector at the top of the calendar to move between months:
+
+- The **previous month** button on the left shows the abbreviated name of the preceding month.
+- The **next month** button on the right shows the abbreviated name of the following month.
+- The currently selected year and full month name are displayed in the center.
+
+Each navigation action updates the URL to reflect the selected year and month, making calendar views bookmarkable and shareable.
+
+## URL structure
+
+```text
+/calendar/:year?/:month?/:day?
+```
+
+| Segment | Description |
+|---------|-------------|
+| `year` | Four-digit year (e.g. `2026`) |
+| `month` | Month number, 1–12 |
+| `day` | Optional. Pre-selects a specific day and opens the details sheet. |
+
+## Viewing episode details
+
+<Steps>
+  <Step title="Click a date">
+    Click any highlighted date in the monthly grid or in the day list. A bottom sheet slides up showing all episodes that aired on that day.
+  </Step>
+  <Step title="Browse episodes">
+    Each entry in the sheet shows the series name, season number, and episode number (e.g. `S3E7`).
+  </Step>
+  <Step title="Start watching">
+    Click an episode row to navigate to its streams page where you can pick a source and begin playback.
+  </Step>
+  <Step title="Close the sheet">
+    Click outside the sheet or press the close button to dismiss it and return to the calendar.
+  </Step>
+</Steps>
+
+## Relationship to your library
+
+The Calendar is a read-only view derived from your library. It does not let you add or remove titles — do that from the Library page or any metadata page.
+
+<AccordionGroup>
+  <Accordion title="Which series appear on the calendar">
+    Any series you have added to your library that provides video metadata with air dates. If a series does not show episodes on the calendar, the addon that provides it may not supply release date information.
+  </Accordion>
+  <Accordion title="Past vs future dates">
+    Both past episode dates and future scheduled release dates appear on the calendar, as long as the addon provides the data. This lets you track both what has aired and what is coming up.
+  </Accordion>
+  <Accordion title="Sign-in requirement">
+    Without an account, the Calendar shows a placeholder prompting you to log in. All calendar data is tied to your library, which requires authentication.
+  </Accordion>
+</AccordionGroup>

@@ -1,0 +1,176 @@
+---
+title: Installation
+description: Install Stremio Web for local development, produce a production build, or run it in a Docker container.
+---
+
+Stremio Web supports three main installation paths depending on your use case.
+
+## Prerequisites
+
+| Tool | Required version |
+|------|------------------|
+| Node.js | 20.x (see `.nvmrc`) |
+| pnpm | 10 or higher |
+| Docker | Any recent version (Docker path only) |
+| Git | Required by the Webpack build to read the commit hash |
+
+<Note>
+  The Webpack config calls `git rev-parse HEAD` at build time to embed the commit hash in asset paths. A valid Git repository is required for all non-Docker build paths.
+</Note>
+
+## Installation methods
+
+<Tabs>
+  <Tab title="Local development">
+    Use this path when working on the codebase or exploring Stremio Web locally.
+
+    **1. Clone and install**
+
+    ```bash
+    git clone https://github.com/Stremio/stremio-web.git
+    cd stremio-web
+    pnpm install
+    ```
+
+    **2. Start the dev server**
+
+    ```bash
+    pnpm start
+    ```
+
+    This runs `webpack serve --mode development` on `https://0.0.0.0:8080`.
+
+    The development server has the following characteristics:
+
+    - HTTPS only (self-signed certificate)
+    - Source maps via `eval-source-map`
+    - `DEBUG=true` environment variable set
+    - Service worker disabled
+    - Live reload disabled — refresh the page manually after changes
+
+    **3. Open the app**
+
+    ```
+    https://localhost:8080
+    ```
+
+    Accept the browser's certificate warning for localhost.
+  </Tab>
+
+  <Tab title="Production build">
+    Use this path to build a static bundle you can serve with any HTTP server.
+
+    **1. Clone and install**
+
+    ```bash
+    git clone https://github.com/Stremio/stremio-web.git
+    cd stremio-web
+    pnpm install
+    ```
+
+    **2. Build**
+
+    ```bash
+    pnpm run build
+    ```
+
+    This runs `webpack --mode production` and outputs the bundle to the `build/` directory.
+
+    The production build includes:
+
+    - Minified JS and CSS via Terser and cssnano
+    - A Workbox-generated service worker for offline support
+    - Assets hashed by commit SHA under `build/<commit-hash>/`
+    - `index.html` at the root
+
+    **3. Serve the build directory**
+
+    You can serve the `build/` output with any static file server. The included `http_server.js` uses Express:
+
+    ```bash
+    node http_server.js
+    ```
+
+    The server listens on port `8080` and sets the following cache headers:
+
+    | Resource | `Cache-Control` max-age |
+    |----------|-------------------------|
+    | `index.html` | 7,200 seconds (2 hours) |
+    | All other assets | 2,629,744 seconds (~30 days) |
+
+    <Tip>
+      Long cache lifetimes on static assets are safe because asset filenames include the commit hash, so new deployments always fetch fresh files.
+    </Tip>
+  </Tab>
+
+  <Tab title="Docker">
+    Use this path to run Stremio Web in a container without installing Node.js locally.
+
+    **1. Build the image**
+
+    ```bash
+    docker build -t stremio-web .
+    ```
+
+    The Dockerfile uses a multi-stage build on `node:20-alpine`:
+
+    1. **`app` stage** — installs dependencies with `pnpm i --frozen-lockfile` and runs `pnpm build`.
+    2. **`server` stage** — installs Express 4.
+    3. **Final stage** — copies only `http_server.js`, the built `build/` directory, and the Express `node_modules`. No source code is included in the final image.
+
+    **2. Run the container**
+
+    ```bash
+    docker run -p 8080:8080 stremio-web
+    ```
+
+    The container exposes port `8080` and starts `http_server.js` automatically.
+
+    **3. Open the app**
+
+    ```
+    http://localhost:8080
+    ```
+
+    **Custom Node version**
+
+    The `NODE_VERSION` build argument controls the base image tag:
+
+    ```bash
+    docker build --build-arg NODE_VERSION=20-alpine -t stremio-web .
+    ```
+
+    <Warning>
+      The `app` stage runs `git rev-parse HEAD` during the Webpack build. If you are building inside a Docker context that does not include the `.git` directory, the build will fail. Make sure your `.dockerignore` does not exclude `.git`.
+    </Warning>
+  </Tab>
+</Tabs>
+
+## Environment variables
+
+You can pass environment variables to the Webpack build to configure runtime behavior:
+
+| Variable | Default | Description |
+|----------|---------|-------------|
+| `SENTRY_DSN` | `null` | Sentry DSN string. When set, Sentry error reporting is enabled. |
+| `SERVICE_WORKER_DISABLED` | `false` | Set to `true` to skip service worker registration in production. |
+| `DEBUG` | `true` in dev, `false` in prod | Enables debug logging. |
+| `VERSION` | Value from `package.json` | App version string embedded at build time. |
+| `COMMIT_HASH` | Output of `git rev-parse HEAD` | Embedded automatically; used to namespace built assets. |
+
+Pass extra variables via the `--env` flag:
+
+```bash
+pnpm run build --env SENTRY_DSN=https://your-dsn@sentry.io/123
+```
+
+## Next steps
+
+<CardGroup cols={2}>
+  <Card title="Docker deployment" icon="docker" href="/deployment/docker">
+    Detailed guide to running Stremio Web with Docker in production
+  </Card>
+  <Card title="Self-hosting" icon="server" href="/deployment/self-hosting">
+    Serve Stremio Web behind a reverse proxy or on a custom domain
+  </Card>
+</CardGroup>
